@@ -90,7 +90,7 @@ void ADIO_Close(ADIO_File fd, int *error_code)
 	ADIOI_Free(fd->file_realm_types);
     }
     ADIOI_Free(fd->hints);
-
+    ADIOI_Free(fd->fns);
 
 
     MPI_Comm_free(&(fd->comm));

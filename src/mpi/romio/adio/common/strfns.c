@@ -6,6 +6,7 @@
  */
 
 #include "adio.h"
+#include <ctype.h>
 
 /* 
  * Below are the "safe" versions of the various string and printf
@@ -65,6 +66,23 @@ int ADIOI_Strncpy( char *dest, const char *src, size_t n )
 	   debugging version */
 	return 1;
 }
+/*
+ * Convert string to lowercase 
+ * Converts inplace, returns pointer to str
+ */
+char * ADIOI_Strlower (char * str)
+{
+   if (!str)
+      return str; 
+   while (*str)
+   {
+      *str = tolower(*str); 
+      str++; 
+   }
+   return str; 
+}
+
+
 
 /*@ 
   ADIOI_Strdup - Duplicate a string

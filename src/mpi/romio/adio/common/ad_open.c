@@ -5,6 +5,7 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#include <assert.h>
 #include "adio.h"
 #include "adio_extern.h"
 #include "adio_cb_config_list.h"
@@ -58,7 +59,9 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->file_system = file_system;
     fd->fs_ptr = NULL;
 
-    fd->fns = ops;
+   fd->fns = (ADIOI_Fns *) ADIOI_Malloc(sizeof(ADIOI_Fns));
+    /* make a copy of the fns struct for now */
+    *fd->fns = *ops;
 
     fd->disp = disp;
     fd->split_coll_count = 0;
@@ -67,6 +70,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->etype = etype;          /* MPI_BYTE by default */
     fd->filetype = filetype;    /* MPI_BYTE by default */
     fd->etype_size = 1;  /* default etype is MPI_BYTE */
+    fd->datarep = ADIOI_Strdup ("native"); /* default datarep is native */
 
     fd->file_realm_st_offs = NULL;
     fd->file_realm_types = NULL;
@@ -205,6 +209,8 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	ADIOI_Free(fd->hints->ranklist);
 	ADIOI_Free(fd->hints->cb_config_list);
 	ADIOI_Free(fd->hints);
+	ADIOI_Free(fd->datarep);
+	ADIOI_Free(fd->fns);
 	if (fd->info != MPI_INFO_NULL) MPI_Info_free(&(fd->info));
 	ADIOI_Free(fd->io_buf);
 	ADIOI_Free(fd);

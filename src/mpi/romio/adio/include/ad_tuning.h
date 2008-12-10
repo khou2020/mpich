@@ -29,6 +29,7 @@ extern int      romio_onesided_no_rmw;
 extern int      romio_onesided_always_rmw;
 extern int      romio_onesided_inform_rmw;
 extern int      romio_tunegather;
+extern int      romio_agg_map_policy;
 
 /* set internal variables for tuning environment variables */
 void ad_get_env_vars(void);

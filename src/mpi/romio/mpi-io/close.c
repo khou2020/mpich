@@ -70,6 +70,8 @@ int MPI_File_close(MPI_File *fh)
 	    /* --END ERROR HANDLING-- */
 	}
     }
+    ADIOI_Free (adio_fh->datarep);
+
 
     /* Because ROMIO expects the MPI library to provide error handler management
      * routines but it doesn't ever participate in MPI_File_close, we have to

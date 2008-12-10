@@ -67,8 +67,8 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype,
     /* --END ERROR HANDLING-- */
 
     *disp = adio_fh->disp;
-    ADIOI_Strncpy(datarep, 
-	    (adio_fh->is_external32 ? "external32": "native"), MPI_MAX_DATAREP_STRING);
+    ADIOI_Strncpy(datarep,
+	    fh->datarep, MPI_MAX_DATAREP_STRING);
 
     MPI_Type_get_envelope(adio_fh->etype, &i, &j, &k, &combiner);
     if (combiner == MPI_COMBINER_NAMED) *etype = adio_fh->etype;

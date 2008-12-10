@@ -28,9 +28,58 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 /* for user-definde reduce operator */
 #include "adio_extern.h"
 
+#if ROMIO_ICACHE || ROMIO_TRACE
+#include "layered.h"
+#endif
+
+#ifdef ROMIO_ICACHE
+#include "adioi_fs_proto.h" 
+#define ROMIO_KEY_ICACHE_ENABLE      "romio_icache" 
+#endif
+
+/* The name of the info key that will contain the adio name */
+#define ROMIO_KEY_ADIO_NAME 	     "romio_adio_name" 
+
+#ifdef ROMIO_TRACE
+#define ROMIO_KEY_TRACE_ENABLE       "romio_trace"
+#define ROMIO_KEY_TRACE_TWICE_ENABLE "romio_trace_twice" 
+#endif
+
+#include <assert.h>
+
 
 extern int ADIO_Init_keyval;
+#if ROMIO_TRACE || ROMIO_ICACHE
 
+/* check if the specified key is set;
+ * If so, change fns to point to the new fsops, and save the old one in the
+ * pointer pointed to by 'old'
+ */
+int check_layered (MPI_Info info, const char * s, ADIOI_Fns * myfns,
+      ADIOI_Fns ** fns, ADIOI_Fns ** old)
+{
+   int enable = 0;
+
+   if (MPI_INFO_NULL != info)
+   {
+      int flag;
+      char dummy;
+
+      MPI_Info_get (info, (char *)s, 1, &dummy, &flag);
+      if (flag)
+	 enable=1;
+   }
+   if (enable)
+   {
+      *old = *fns;
+      *fns = myfns;
+   }
+
+   return enable;
+}
+#endif
+
+ 
 /*@
     MPI_File_open - Opens a file
 
@@ -53,6 +102,19 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     MPI_Comm dupcomm = MPI_COMM_NULL;
     ADIOI_Fns *fsops;
     static char myname[] = "MPI_FILE_OPEN";
+    const char * adio_name = 0 ;
+
+#ifdef ROMIO_ICACHE
+    int ad_icache_enable = 0;
+    ADIOI_Fns * ad_icache_old;
+#endif
+#ifdef ROMIO_TRACE
+    int ad_trace_enable = 0;
+    int ad_trace_twice_enable = 0;
+    ADIOI_Fns * ad_trace_old;
+    ADIOI_Fns * ad_trace_twice_old;
+#endif
+
 #ifdef MPI_hpux
     int fl_xmpi;
 
@@ -127,7 +189,8 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     file_system = -1;
 
     /* resolve file system type from file name; this is a collective call */
-    ADIO_ResolveFileType(dupcomm, filename, &file_system, &fsops, &error_code);
+    ADIO_ResolveFileType(dupcomm, filename, &file_system, &fsops,
+	    &adio_name, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
     {
@@ -153,6 +216,38 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
     *fh = ADIO_Open(comm, dupcomm, filename, file_system, fsops, amode, 0,
 		    MPI_BYTE, MPI_BYTE, info, ADIO_PERM_NULL, &error_code);
+    if (error_code == MPI_SUCCESS)
+    {
+
+       /* fout hier: volgorde verkeerd bij meerdere slaves;
+        * stack nodig?
+	* (google translate: wrong here: order wrong in multiple slaves; Stack
+	* need? )*/
+
+#ifdef ROMIO_TRACE
+    ad_trace_enable = check_layered (info, ROMIO_KEY_TRACE_ENABLE,
+	  &ADIO_TRACE_operations, &fsops, &ad_trace_old);
+#endif
+
+#ifdef ROMIO_ICACHE
+    ad_icache_enable = check_layered (info, ROMIO_KEY_ICACHE_ENABLE,
+	  &ADIO_ICACHE_operations, &fsops, &ad_icache_old);
+#endif
+
+#ifdef ROMIO_TRACE
+    ad_trace_twice_enable = check_layered (info, ROMIO_KEY_TRACE_TWICE_ENABLE,
+	  &ADIO_TRACE_operations, &fsops, &ad_trace_twice_old);
+#endif
+
+       /* add ADIO name key; We rely on ADIO_Open to create the info object  */
+       if ((*fh)->info == MPI_INFO_NULL)
+          MPI_Info_create (&(*fh)->info); 
+       MPI_Info_set ((*fh)->info, ROMIO_KEY_ADIO_NAME, (char*) adio_name); 
+
+    }
+
+
+
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {
