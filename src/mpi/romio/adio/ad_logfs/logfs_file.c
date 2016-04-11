@@ -252,39 +252,20 @@ static inline void logfs_file_readdatatype(logfs_file_handle handle, logfs_file_
 {
     logfs_file_read(handle, &info->count, sizeof(info->count));
 
-    info->indices = ADIOI_Malloc(sizeof(ADIO_Offset) * info->count);
-    info->blocklens = ADIOI_Malloc(sizeof(int) * info->count);
+   info->indices = ADIOI_Malloc (sizeof(*(info->indices))*info->count); 
+   info->blocklens = ADIOI_Malloc (sizeof(*(info->blocklens))*info->count); 
 
-    logfs_file_read(handle, info->indices, sizeof(ADIO_Offset) * info->count);
-    logfs_file_read(handle, info->blocklens, sizeof(int) * info->count);
+   logfs_file_read (handle, info->indices, sizeof(*(info->indices))*info->count) ; 
+   logfs_file_read (handle, info->blocklens, sizeof(*(info->blocklens))*info->count); 
 }
 
 static void logfs_file_writedatatype(logfs_file_handle handle, MPI_Datatype type)
 {
-    int cont;
     ADIOI_Flatlist_node *flat_buf;
 
 
-    ADIOI_Datatype_iscontig(type, &cont);
-    if (cont) {
-        /* these need to have the same type as a real flatlist node */
-        int count = 1;
-        ADIO_Offset index = 0;
-        int len;
-
-        MPI_Type_size(type, &len);
-
-        /* simple case */
-        /* write count, index, len */
-        /* maybe pack to intermediate buffer if this would be too slow? */
-        logfs_file_write(handle, &count, sizeof(count), LOGFS_FILE_LOG_META);
-        logfs_file_write(handle, &index, sizeof(index), LOGFS_FILE_LOG_META);
-        logfs_file_write(handle, &len, sizeof(len), LOGFS_FILE_LOG_META);
-
-        return;
-    }
-
-    /* see if the flattened version is already there */
+   /* flattened code will store flattened representation as an attribute on
+    * both built-in contiguous types and user-derrived types */
     flat_buf = ADIOI_Flatten_and_find(type);
 
     assert(flat_buf);

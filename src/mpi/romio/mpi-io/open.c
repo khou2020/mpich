@@ -37,9 +37,6 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 #define ROMIO_KEY_ICACHE_ENABLE      "romio_icache" 
 #endif
 
-/* The name of the info key that will contain the adio name */
-#define ROMIO_KEY_ADIO_NAME 	     "romio_adio_name" 
-
 #ifdef ROMIO_TRACE
 #define ROMIO_KEY_TRACE_ENABLE       "romio_trace"
 #define ROMIO_KEY_TRACE_TWICE_ENABLE "romio_trace_twice" 
@@ -102,7 +99,6 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     MPI_Comm dupcomm = MPI_COMM_NULL;
     ADIOI_Fns *fsops;
     static char myname[] = "MPI_FILE_OPEN";
-    const char * adio_name = 0 ;
 
 #ifdef ROMIO_ICACHE
     int ad_icache_enable = 0;
@@ -190,7 +186,7 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
     /* resolve file system type from file name; this is a collective call */
     ADIO_ResolveFileType(dupcomm, filename, &file_system, &fsops,
-	    &adio_name, &error_code);
+	    &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
     {
@@ -238,11 +234,6 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     ad_trace_twice_enable = check_layered (info, ROMIO_KEY_TRACE_TWICE_ENABLE,
 	  &ADIO_TRACE_operations, &fsops, &ad_trace_twice_old);
 #endif
-
-       /* add ADIO name key; We rely on ADIO_Open to create the info object  */
-       if ((*fh)->info == MPI_INFO_NULL)
-          MPI_Info_create (&(*fh)->info); 
-       MPI_Info_set ((*fh)->info, ROMIO_KEY_ADIO_NAME, (char*) adio_name); 
 
     }
 

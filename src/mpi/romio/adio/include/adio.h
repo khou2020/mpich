@@ -406,7 +406,7 @@ void ADIO_Flush(ADIO_File fd, int *error_code);
 void ADIO_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 void ADIO_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
-          ADIOI_Fns **ops, const char **name, int *error_code);
+          ADIOI_Fns **ops, int *error_code);
 const char * ADIO_FileTypeToPrefix (int filetype);
 void ADIO_Get_shared_fp(ADIO_File fd, ADIO_Offset size, ADIO_Offset *shared_fp,
 			 int *error_code);

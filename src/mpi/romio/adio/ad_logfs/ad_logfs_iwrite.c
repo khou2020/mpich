@@ -42,9 +42,6 @@ void ADIOI_LOGFS_IwriteContig(ADIO_File fd, const void *buf, int count,
     MPI_Type_size_x(datatype, &typesize);
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
-    FPRINTF(stdout, "[%d/%d] ADIOI_LOGFS_IwriteContig called on %s\n",
-            myrank, nprocs, fd->filename);
-
 
     len = count * typesize;
     ADIOI_LOGFS_WriteContig(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);

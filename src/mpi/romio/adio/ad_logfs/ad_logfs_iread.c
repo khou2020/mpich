@@ -33,7 +33,6 @@ void ADIOI_LOGFS_IreadContig(ADIO_File fd, void *buf, int count,
     MPI_Type_size(datatype, &typesize);
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
-    FPRINTF(stdout, "[%d/%d] ADIOI_LOGFS_IreadContig called on %s\n", myrank, nprocs, fd->filename);
 /*    FPRINTF(stdout, "[%d/%d]    calling ADIOI_LOGFS_ReadContig\n",
 	    myrank, nprocs);
 

@@ -447,6 +447,10 @@ void writering_read_flush (writering_handle handle)
    if (!handle->blockcount)
       return; 
 
+   /* if there are no reads pending, skip waiting */
+   if (handle->read_active < 0)
+       return;
+
    /* Wait until pending read is done */ 
    writering_read_nonblock_wait (handle); 
     
@@ -1124,6 +1128,9 @@ void writering_flush (writering_handle handle)
 void writering_reset (writering_handle handle, WRR_OFFSET size)
 {
    unsigned int i; 
+   /* file might not yet be open, but that's strange...  */
+   if (! handle->open) return;
+
    for (i=0; i<handle->blockcount; ++i)
    {
       writering_block * ptr = &handle->blocks[i]; 

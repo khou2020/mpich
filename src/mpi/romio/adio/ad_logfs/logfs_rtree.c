@@ -100,12 +100,15 @@ static void logfs_rtree_readtypes(logfs_rtree_flush_state * state, MPI_Datatype 
 
     /* Moet ook voor originele volgorde de gesorteerde index weten om memtype
      * aan te maken */
+   /* google translate: Must also know the sorted index for the original order
+    * to create memtype */
     myqsort(sortindices, sortblocklens, 0, count - 1);
     MPI_Type_indexed(count, sortblocklens, sortindices, MPI_BYTE, filetype);
     MPI_Type_commit(filetype);
 
     /* now reuse sortindices to create memtype */
     /* WAARSCHIJNLIJK VERKEERD!!! Dit doet geen herordering in geheugen! */
+   /* google translate: PROBABLY WRONG This does not Reordered the memory! */
     sortindices[0] = 0;
     sortblocklens[0] = blocklens[0];
     for (i = 1; i < count; ++i) {

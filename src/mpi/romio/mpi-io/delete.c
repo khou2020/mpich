@@ -39,7 +39,6 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     int error_code, file_system;
     char *tmp;
     ADIOI_Fns *fsops;
-    const char *name = 0;
 #ifdef MPI_hpux
     int fl_xmpi;
   
@@ -56,7 +55,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 
     /* resolve file system type from file name; this is a collective call */
     ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, 
-                        &name, &error_code);
+                        &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)

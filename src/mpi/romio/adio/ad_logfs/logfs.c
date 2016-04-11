@@ -688,7 +688,6 @@ static int logfs_logfilename(const char *logfilebase, char *buf, int bufsize,
 {
    snprintf (buf, bufsize, "%s.%u.%s", logfilebase, cpunum,
                    (logtype == LOGFS_FILE_LOG_META ? "meta" : "data"));
-    assert(len <= bufsize);
     return 1;
 }
 
@@ -819,7 +818,7 @@ static int logfs_flush_stop(void *userdata)
 {
     logfs_flushtree_state *state = (logfs_flushtree_state *) userdata;
     assert(state->readreq == MPI_REQUEST_NULL);
-    assert(state->writereq = MPI_REQUEST_NULL);
+   assert (state->writereq == MPI_REQUEST_NULL); 
     MPI_Info_free(&state->readinfo);
     MPI_Info_free(&state->writeinfo);
     return 1;

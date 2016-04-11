@@ -119,7 +119,6 @@ static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep);
 #endif 
 static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
 	                            ADIOI_Fns **ops,
-				    const char **name,
 				    int *error_code);
 static void ADIO_FileSysType_fncall(const char *filename, int *fstype,
 				    int *error_code);
@@ -128,7 +127,6 @@ struct ADIO_FSTypes
    ADIOI_Fns * fileops;   	/* function table */
    int    fstype;               /* ADIO_xxx constant */
    const char * prefix;         /* file prefix */
-   const char * name;           /* name of ADIO driver (returned in filehint)*/ 
 };  
 
 /* 
@@ -139,22 +137,22 @@ struct ADIO_FSTypes
  */
 static struct ADIO_FSTypes fstypes[] = { 
 #ifdef ROMIO_UFS
-   { &ADIO_UFS_operations, ADIO_UFS, "ufs:", "ufs"},
+   { &ADIO_UFS_operations, ADIO_UFS, "ufs:"},
 #endif
 #ifdef ROMIO_NFS
-   { &ADIO_NFS_operations, ADIO_NFS, "nfs:", "nfs"},
+   { &ADIO_NFS_operations, ADIO_NFS, "nfs:"},
 #endif
 #ifdef ROMIO_XFS
-   { &ADIO_XFS_operations, ADIO_XFS, "xfs:", "xfs"}, 
+   { &ADIO_XFS_operations, ADIO_XFS, "xfs:"}, 
 #endif
 #ifdef ROMIO_PVFS2
-   { &ADIO_PVFS2_operations, ADIO_PVFS2, "pvfs2:", "pvfs"}, 
+   { &ADIO_PVFS2_operations, ADIO_PVFS2, "pvfs2:"}, 
 #endif
 #ifdef ROMIO_TESTFS
-   { &ADIO_TESTFS_operations, ADIO_TESTFS, "testfs:", "testfs"}, 
+   { &ADIO_TESTFS_operations, ADIO_TESTFS, "testfs:"}, 
 #endif
 #ifdef ROMIO_LOGFS
-   { &ADIO_LOGFS_operations, ADIO_LOGFS, "logfs:", "logfs"}, 
+   { &ADIO_LOGFS_operations, ADIO_LOGFS, "logfs:"}, 
 #endif
 #if 0 
    /* cannot force icache / trace since there is no way to specify 
@@ -166,7 +164,7 @@ static struct ADIO_FSTypes fstypes[] = {
    { &ADIO_ICACHE_operations, ADIO_ICACHE, "icache:", "icache"}, 
 #endif
 #endif
-   { 0, 0, 0, 0 } /* guard entry */
+   { 0, 0, 0} /* guard entry */
 }; 
 
 
@@ -581,7 +579,7 @@ Output Parameters:
 
  */
 static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
-	ADIOI_Fns **ops, const char **name, int *error_code)
+	ADIOI_Fns **ops, int *error_code)
 {
     char * cpy = 0;
     int i;
@@ -600,7 +598,6 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
 	{
 	    *fstype = fstypes[i].fstype;
 	    *ops = fstypes[i].fileops;
-	    *name = fstypes[i].name;
 	    break;
 	}
 	++i;
@@ -640,7 +637,7 @@ for this fs type" code from the MPI layer and also to introduce the ADIOI_Fns
 tables in a reasonable way. -- Rob, 06/06/2001
 @*/
 void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
-			  ADIOI_Fns **ops, const char **name, int *error_code)
+			  ADIOI_Fns **ops, int *error_code)
 {
     int myerrcode, file_system, min_code, max_code;
     char *tmp;
@@ -649,7 +646,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 
     *ops = 0;
     file_system = -1;
-    *name = 0;
     if (filename == NULL) {
 	*error_code = ADIOI_Err_create_code(myname, filename, ENOENT);
 	return;
@@ -716,7 +712,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	 *
 	 * perhaps we should have this code go through the allreduce as well?
 	 */
-	ADIO_FileSysType_prefix(filename, &file_system, ops, name, &myerrcode);
+	ADIO_FileSysType_prefix(filename, &file_system, ops, &myerrcode);
 	if (myerrcode != MPI_SUCCESS) {
 	    *error_code = myerrcode;
 	    return;
@@ -732,7 +728,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
      * including the colon! */
     p = getenv("ROMIO_FSTYPE_FORCE");
     if (p != NULL) {
-	ADIO_FileSysType_prefix(p, &file_system, ops, name, &myerrcode);
+	ADIO_FileSysType_prefix(p, &file_system, ops, &myerrcode);
 	if (myerrcode != MPI_SUCCESS) {
 	    *error_code = myerrcode;
 	    return;
@@ -748,7 +744,6 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	    if (file_system == fstypes[i].fstype)
 	    {
 		*ops = fstypes[i].fileops;
-		*name = fstypes[i].name;
 		break;
 	    }
 	    ++i;

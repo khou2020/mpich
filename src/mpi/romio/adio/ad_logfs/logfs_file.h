@@ -59,10 +59,11 @@ typedef struct {
 
 
 /* flatlist like structure */
-typedef struct {
-    int count;
-    int *blocklens;
-    int *indices;
+typedef struct
+{
+   MPI_Count count;
+   ADIO_Offset * blocklens;
+   ADIO_Offset * indices;
 } logfs_file_typeinfo;
 
 
