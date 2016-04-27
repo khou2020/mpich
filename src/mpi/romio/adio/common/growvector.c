@@ -10,6 +10,7 @@ void growvector_clear (growvector_handle handle)
 void growvector_free (growvector_handle * handle)
 {
    free ((*handle)->data); 
+   free(*handle);
    *handle = 0; 
 }
 

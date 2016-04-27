@@ -87,7 +87,7 @@ struct ADIO_LOGFS_Data {
     writering_mpi_data writemeta_state;
 
     logfs_file_handle logfsfile;
-    char *logfilebase;
+   char                 logfilebase[PATH_MAX];
     char *realfilename;
 
     /* logfsfile (handled by CPU 0) */
@@ -598,13 +598,14 @@ static int logfs_logfsfile_create(ADIO_LOGFS_Data * data)
     if (!data->commrank) {
 
         /* Create default header */
-        memset(&h.magic[0], 0, sizeof(h.magic));
-        strcpy(h.magic, LOGFS_LOCKFILE_MAGIC);
+      memset(&h, 0, sizeof(h)); 
+      strncpy (h.magic, LOGFS_LOCKFILE_MAGIC, sizeof(h.magic)); 
         h.flags = LOGFS_FLAG_MODE_ACTIVE;
         h.logfilecount = commsize;
         h.epoch = 0;
         memset(&h.logfilebase[0], 0, sizeof(h.logfilebase));
-        //strncpy (h.logfilebase, h.logfilebase, sizeof(h.logfilebase)-1);
+      if (data->logfilebase != NULL)
+	  strncpy (h.logfilebase, data->logfilebase, sizeof(h.logfilebase));
 
         /* see if we can open an existing logfs file */
         assert(data->logfsfilehandle == MPI_FILE_NULL);
@@ -1049,22 +1050,23 @@ static inline void logfs_activate_initwritering(ADIO_File fd,
         debuginfo("invalid RD/WR flags in logfs_activate??\n");
 
     /* defaults are in hints  */
-    data->logfilebase = 0;
+   data->logfilebase[0] = 0;
 
     /* first check hint */
-    if (!data->logfilebase && data->hints.logfilebase)
-        data->logfilebase = ADIOI_Strdup(data->hints.logfilebase);
+   if (data->hints.logfilebase)
+      ADIOI_Strncpy(data->logfilebase, data->hints.logfilebase, PATH_MAX);
 
     /* check environment (only if no hint is set) */
-    if (!data->logfilebase && getenv("LOGFSTMP"))
-        data->logfilebase = ADIOI_Strdup(getenv("LOGFSTMP"));
+   if (getenv ("LOGFSTMP"))
+      ADIOI_Strncpy(data->logfilebase, getenv("LOGFSTMP"), PATH_MAX);
 
     /* if no logfilebase was set, and the user indicated no preference,
      * put it next to the real file */
-    if (!data->logfilebase) {
+   if (data->logfilebase[0] == 0)
+   {
         char buf[255];
         logfs_safeprefix(data->realfilename, buf, sizeof(buf));
-        data->logfilebase = ADIOI_Strdup(buf);
+      ADIOI_Strncpy(data->logfilebase, buf, PATH_MAX);
     }
 
     assert(data->logfilebase);
@@ -1221,7 +1223,9 @@ static void logfs_process_info(struct ADIO_LOGFS_Hints *hints, MPI_Info info)
         else if (hints->debug)
             debuginfo("logfs: unknown read mode (%s) requested in hint "
                       "(%s)!\n", ptr, LOGFS_INFO_READMODE);
+      ADIOI_Free(ptr);
     }
+
 }
 
 /* modify given hint object so that it contains all the info
@@ -1269,6 +1273,7 @@ void logfs_transfer_hints(MPI_Info source, MPI_Info dest)
 
     logfs_process_info(&h, source);
     logfs_store_info(&h, dest);
+   if (h.logfilebase) ADIOI_Free(h.logfilebase);
 }
 
 /* update internal hints structure, also update fd->info
@@ -1305,7 +1310,7 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     int reopen = 0;
 
     ADIO_LOGFS_Data *data = (ADIO_LOGFS_Data *)
-        ADIOI_Malloc(sizeof(ADIO_LOGFS_Data));
+      ADIOI_Calloc (1, sizeof(ADIO_LOGFS_Data));
 
     /* set default hints */
     logfs_hints_default(&data->hints);
@@ -1346,6 +1351,10 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     assert(prefix != 0);
     data->realfilename = ADIOI_Malloc(strlen(prefix) + strlen(fd->filename) + 1);
     sprintf(data->realfilename, "%s%s", prefix, fd->filename);
+
+   /* basedir */
+   if (data->hints.logfilebase != NULL)
+       ADIOI_Strncpy(data->logfilebase, data->hints.logfilebase, PATH_MAX );
 
     /* store logfsfilename (including prefix!) */
     logfs_logfsfilename(data->realfilename, buf, sizeof(buf) - 1);
@@ -1493,9 +1502,6 @@ int logfs_deactivate(ADIO_File fd)
         ADIOI_Layer_done(fd);
 
 
-    /* free data */
-    ADIOI_Free(data->writemeta_state.filename);
-    ADIOI_Free(data->writedata_state.filename);
 
     if (data->view_etype != MPI_DATATYPE_NULL)
         MPI_Type_free(&data->view_etype);
@@ -1524,7 +1530,8 @@ int logfs_deactivate(ADIO_File fd)
     logfs_lockfile_unlock(data);
 
     /* Free strings */
-    ADIOI_Free(data->logfilebase);
+   ADIOI_Free (data->writemeta_state.filename); 
+   ADIOI_Free (data->writedata_state.filename); 
     ADIOI_Free(data->logfsfilename);
     ADIOI_Free(data->lockfilename);
     ADIOI_Free(data->realfilename);

@@ -179,10 +179,6 @@ static void logfs_rtree_replay_startwrite(logfs_rtree_flush_state * state)
         MPI_Type_indexed(segmentcount, sortblocklens, sortindices, MPI_BYTE, &writefiletype);
         MPI_Type_commit(&writefiletype);
 
-        /* free conversion buffers */
-        ADIOI_Free(sortindices);
-        ADIOI_Free(sortblocklens);
-
     }
     else {
         /* create dummy write type */
@@ -199,6 +195,11 @@ static void logfs_rtree_replay_startwrite(logfs_rtree_flush_state * state)
     growvector_clear(state->blocklens);
     growvector_clear(state->indices);
     growvector_clear(state->realpos);
+
+   /* free conversion buffers */
+   ADIOI_Free (sortindices); 
+   ADIOI_Free (sortblocklens); 
+
 
     /* if we are collective, do an alreduce in the end to find the maximum
      * filesize and to see if everybody is done... */
@@ -447,4 +448,5 @@ void logfs_rtree_addsplit(logfs_rtree * tree, ADIO_Offset start, ADIO_Offset
     /* add the region */
     rtree_add(rtree, &newrange, diskstart);
     logfs_rtree_updatesize(datasize, newrange.stop - newrange.start);
+   memstack_free(&list);
 }
