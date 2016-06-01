@@ -154,6 +154,13 @@ static struct ADIO_FSTypes fstypes[] = {
 #ifdef ROMIO_LOGFS
    { &ADIO_LOGFS_operations, ADIO_LOGFS, "logfs:"}, 
 #endif
+#ifdef ROMIO_GPFS
+   { &ADIO_GPFS_operations, ADIO_GPFS, "gpfs:"},
+#endif
+#ifdef ROMIO_LUSTRE
+   { &ADIO_LUSTRE_operations, ADIO_LUSTRE, "lustre:"},
+#endif
+
 #if 0 
    /* cannot force icache / trace since there is no way to specify 
     * the underlying filesystem */
