@@ -13,14 +13,8 @@
 
 void ADIOI_LOGFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
 {
-    int myrank, nprocs;
-
     /* resize always works */
     *error_code = MPI_SUCCESS;
-
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
-    FPRINTF(stdout, "[%d/%d] ADIOI_LOGFS_Resize called on %s\n", myrank, nprocs, fd->filename);
 
     logfs_resize(fd, size);
 }

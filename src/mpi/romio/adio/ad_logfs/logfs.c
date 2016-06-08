@@ -67,6 +67,7 @@ struct ADIO_LOGFS_Hints {
     int datablockcount;         /* Number of write buffers (data) */
     int metablocksize;          /* size of buffer for metalog */
     int metablockcount;         /* number of buffers for metalog */
+   int                  flushblocksize;     /* size of intermediate buffer when replaying log file */
     int sync;                   /* Don't do async write combining */
     char *logfilebase;          /* Basename/dir for logfiles */
     int replay_on_close;        /* replay when closing */
@@ -156,6 +157,7 @@ static inline int checkError(int ret)
     debuginfo("%s\n", msg);
     MPL_backtrace_show(stderr);
     assert(0);
+   return -1;
 }
 
 static void debuginfo(const char *str, ...)
@@ -924,6 +926,7 @@ static int logfs_flush_writewait(void *userdata)
 static void logfs_flushtree(ADIO_LOGFS_Data * data, rtree_const_handle tree, int collective)
 {
     ADIO_Offset filesize = 0;
+   int flushsize;
     logfs_flushtree_state state;
     logfs_rtree_flush_cb cb;
 
@@ -941,7 +944,13 @@ static void logfs_flushtree(ADIO_LOGFS_Data * data, rtree_const_handle tree, int
     state.collective = collective;
     state.logfsdata = data;
 
-    logfs_rtree_flush(&data->tree, 1024 * 1024, &cb, &state, collective, &filesize, data->comm);
+   if (data->hints.flushblocksize != 0)
+       flushsize = data->hints.flushblocksize;
+   else
+       flushsize = 1024*1024;
+
+   logfs_rtree_flush (&data->tree, flushsize,
+	 &cb, &state, collective, &filesize, data->comm);
 }
 
 int logfs_replay_helper(ADIO_LOGFS_Data * data, int collective)
@@ -1164,6 +1173,7 @@ static void logfs_hints_default(struct ADIO_LOGFS_Hints *h)
     h->metablocksize = 0;
     h->datablockcount = 0;
     h->datablocksize = 0;
+   h->flushblocksize = 0;
     h->readmode = LOGFS_READMODE_SOME;
     h->logfilebase = 0;
     h->replay_on_close = 0;
@@ -1193,16 +1203,26 @@ static void logfs_process_info(struct ADIO_LOGFS_Hints *hints, MPI_Info info)
 
     ad_logfs_hint_bool(info, LOGFS_INFO_DEBUG, &hints->debug);
 
-    ad_logfs_hint_int(info, LOGFS_INFO_DATABLOCKCOUNT, &hints->datablockcount);
-    ad_logfs_hint_int(info, LOGFS_INFO_DATABLOCKSIZE, &hints->datablocksize);
-    ad_logfs_hint_int(info, LOGFS_INFO_METABLOCKCOUNT, &hints->metablockcount);
-    ad_logfs_hint_int(info, LOGFS_INFO_METABLOCKSIZE, &hints->metablocksize);
-    ad_logfs_hint_bool(info, LOGFS_INFO_SYNC, &hints->sync);
-    ad_logfs_hint_str(info, LOGFS_INFO_LOGBASE, &hints->logfilebase);
+   ad_logfs_hint_int (info, LOGFS_INFO_DATABLOCKCOUNT,
+         &hints->datablockcount);
+   ad_logfs_hint_int (info, LOGFS_INFO_DATABLOCKSIZE,
+         &hints->datablocksize);
+   ad_logfs_hint_int (info, LOGFS_INFO_METABLOCKCOUNT,
+         &hints->metablockcount);
+   ad_logfs_hint_int (info, LOGFS_INFO_METABLOCKSIZE,
+         &hints->metablocksize);
+   ad_logfs_hint_int(info, LOGFS_INFO_FLUSHBLOCKSIZE,
+	   &hints->flushblocksize);
+   ad_logfs_hint_bool (info, LOGFS_INFO_SYNC,
+         &hints->sync);
+   ad_logfs_hint_str (info, LOGFS_INFO_LOGBASE,
+         &hints->logfilebase);
 
-    ad_logfs_hint_bool(info, LOGFS_INFO_REPLAYCLOSE, &hints->replay_on_close);
+   ad_logfs_hint_bool (info, LOGFS_INFO_REPLAYCLOSE,
+         &hints->replay_on_close);
 
-    ad_logfs_hint_bool(info, LOGFS_INFO_TIMEREPLAY, &hints->timereplay);
+   ad_logfs_hint_bool (info, LOGFS_INFO_TIMEREPLAY,
+         &hints->timereplay);
 
     /* Override timereplay from env */
     if (getenv("LOGFS_TIMEREPLAY"))
@@ -1259,6 +1279,9 @@ static void logfs_store_info(struct ADIO_LOGFS_Hints *hints, MPI_Info info)
     ad_logfs_hint_set_int(info, LOGFS_INFO_DATABLOCKSIZE, hints->datablocksize);
     ad_logfs_hint_set_int(info, LOGFS_INFO_METABLOCKCOUNT, hints->metablockcount);
     ad_logfs_hint_set_int(info, LOGFS_INFO_METABLOCKSIZE, hints->metablocksize);
+
+   ad_logfs_hint_set_int(info, LOGFS_INFO_FLUSHBLOCKSIZE,
+	   hints->flushblocksize);
     ad_logfs_hint_set_bool(info, LOGFS_INFO_SYNC, hints->sync);
     ad_logfs_hint_set_str(info, LOGFS_INFO_LOGBASE, hints->logfilebase);
     ad_logfs_hint_set_bool(info, LOGFS_INFO_REPLAYCLOSE, hints->replay_on_close);
@@ -2010,6 +2033,7 @@ int logfs_sync(ADIO_File fd)
 /* For now, we just replay the last epoch (collective or not)
  * and then read from the real file
  */
+/* note: offset is in bytes, not etypes */
 int logfs_readdata(ADIO_File fd, void *buf,
                    int count, MPI_Datatype memtype, ADIO_Offset offset, int collective,
                    MPI_Status * status)
@@ -2030,10 +2054,19 @@ int logfs_readdata(ADIO_File fd, void *buf,
     /* now we can just read from the real file */
 
     /* set view */
-    file = (collective ? &data->realfile_collective : &data->realfile_single);
-    MPI_File_set_view(*file, data->view_disp, MPI_BYTE, data->view_ftype, "native", MPI_INFO_NULL);
+   if (collective)
+       file = &data->realfile_collective;
+   else
+       file = &data->realfile_single;
 
+       MPI_File_set_view (*file, data->view_disp, MPI_BYTE,
+	       data->view_ftype, "native", MPI_INFO_NULL);
+
+   if (collective) {
     return MPI_File_read_at_all(*file, offset, buf, count, memtype, status);
+   } else {
+       return MPI_File_read_at(*file, offset, buf, count, memtype, status);
+   }
 }
 
 /*
