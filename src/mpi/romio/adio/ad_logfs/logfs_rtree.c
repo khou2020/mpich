@@ -250,6 +250,9 @@ static ADIO_Offset logfs_rtree_flush_add(logfs_rtree_flush_state * state,
     /* OK, databuffer is full or there will be no more data
      * Do write */
     logfs_rtree_replay_startwrite(state);
+   /* filled up this buffer: will issue a collective write operation with
+    * real data, so we have one less no-op write to issue */
+   state->loops--;
 
     return leftover;
 }
@@ -262,13 +265,30 @@ static int logfs_rtree_flush_accept(const rtree_range * range, ADIO_Offset * fil
 {
     logfs_rtree_flush_state *state = (logfs_rtree_flush_state *) extra;
 
+   /* all the bytes described by this node of the tree */
     ADIO_Offset todo = range->stop - range->start;
+   /* bytes processed by slave file system */
     ADIO_Offset done = 0;
+   /* bytes processed in a specific flush_add call. Large ranges will require
+    * multiple rounds */
+   ADIO_Offset nbytes;
 
-    while (todo) {
-        todo = logfs_rtree_flush_add(state, range->start + done, range->stop, (*fileofs) + done);
-        done += range->stop - range->start;
+   /* this loop is semantically similar to that in ad_write.c, where we need to
+    * write N bytes but can only issue a smaller number at a time */
+   while (todo)
+   {
+       /* a small range that does not fill up the buffer could be handled in
+	* one shot.  In fact, it might take multiple tree nodes to fill up the
+	* buffer.  large ranges, though, will require multiple rounds */
+      todo = logfs_rtree_flush_add (state, range->start + done,
+	    range->stop, (*fileofs) + done);
+      nbytes = range->stop - (range->start + done) - todo;
+      done += nbytes;
     }
+   /* after loop exits, there is likely (unless perfectly multiple of buffer
+    * size) a partial write.  calling code will send an "end of data" call,
+    * which will flush everything outstanding . */
+
     return 1;
 }
 
@@ -323,6 +343,18 @@ void logfs_rtree_flush(logfs_rtree * tree, int bufsize,
 
     /* indicate end of data by writing empty region  */
     logfs_rtree_flush_add(&state, 0, 0, 0);
+
+   if (state.coll) {
+       while (state.loops > 0) {
+	   /* Possible for I/o workloaod to be imbalanced across processes.
+	    * Issue zero-byte writes until other processes have finished their
+	    * collective writes */
+	   state.cb->writestart(NULL, MPI_BYTE, 0, state.cbdata);
+	   state.cb->writewait(state.cbdata);
+	   state.loops--;
+       }
+   }
+
 
     /* shut down callbacks */
     state.cb->stop(state.cbdata);
