@@ -133,6 +133,11 @@ void typehelper_calcaccess (MPI_Datatype etype,
 }
 
 /*
+ * Given the parameters of a file view (the teype, ftype, displacement), an
+ * offset, and an amount of data to write, determine the first (start) and last
+ * (stop) bytes touched by the request.
+ * this is looking at the file type (see etype, ftype and other file view
+ * parameters), so take into account tiling, too.
  * Does not work as expected for LB/UB modified types;
  * The code will take the LB/UB as a 0 byte write and take it into account
  * when determining the first and last write position 
@@ -143,78 +148,76 @@ void typehelper_calcrange (MPI_Datatype etype,
       ADIO_Offset * start, ADIO_Offset * stop)
 {
    int ftype_size; 
-   MPI_Aint ftype_extent; 
+   MPI_Aint ftype_lb, ftype_extent; 
    int etype_size; 
    int ftypecount;  /* number of complete ftypes in data */
    ADIOI_Flatlist_node * flat_buf; 
    int remainder; /* amount of bytes in last filetype */
-   int contftype;
    int i; 
-
-   ADIOI_Datatype_iscontig (ftype, &contftype); 
+   ADIO_Offset last_byte; /* last byte of type, ignoring UB marker */
 
    /* ftype_size and ftype_extent, etype_size are
     * calculated when setting the view */ 
-   MPI_Type_extent (ftype, &ftype_extent); 
+   MPI_Type_get_extent (ftype, &ftype_lb, &ftype_extent);
    MPI_Type_size (ftype, &ftype_size); 
    MPI_Type_size (etype, &etype_size); 
 
+   /* offset is a count of etype */
    offset *= etype_size; 
+   /* but file view displacement is absolute bytes */
    offset += disp; 
 
 
-   if (contftype)
-   {
-      /* continuous file type, just add the required number of bytes */
-      *start = offset; 
-      *stop = offset + writesize; 
-      return ; 
-   }
+   /* instead of special-casing contiguous types, they should follow the
+    * noncontiguous code path */
+   /* noncontiguous types a little trickier than contig.  Take into account
+    * tiling of the type (count of type times extent), but also take into
+    * account the UB markers.  Additional complication: the set_view code
+    * already skips over any initial lower bound marker, so 'offset' could come
+    * into this routine with a non-zero value */
 
    /* number of complete filetypes to write */ 
    ftypecount = (writesize) / ftype_size;
    /* number of bytes of the partial filetype */ 
    remainder = (writesize) % ftype_size; 
 
-   /* we know that a flattened version of the filetype was made/kept by the upper
-    * layer; could also cache this  */
    flat_buf = ADIOI_Flatten_and_find(ftype);
 
    assert (flat_buf); 
 
+   if (flat_buf->blocklens[flat_buf->count-1] == 0)
+       /* the '-2' seems odd at first glance, but if there is an upper bound
+	* marker then there must be at least two items in the flattened
+	* representation */
+       last_byte = flat_buf->indices[flat_buf->count -2] +
+	   flat_buf->blocklens[flat_buf->count -2];
+   else
+       last_byte = flat_buf->indices[flat_buf->count -1] +
+	   flat_buf->blocklens[flat_buf->count -1];
 
-   /* increase offset by leading hole in first filetype */
-   if (ftypecount)
-      offset += flat_buf->indices[0]; 
+   /* offset now indicates first byte to write */
+   *start = offset;
 
-   *start = offset; 
+   /* before tiling these filetypes, need to (maybe) wind back the offset to
+    * account for the lower bound (which set_file_view skipped over) */
+   if (flat_buf->blocklens[0] == 0)
+       offset -= flat_buf->indices[1];
 
-     /* add extent for count filetypes */
-   offset += ftypecount * ftype_extent; 
+     /* add extent for count filetypes.  these are the complete file types.
+      * We'll do any partial file types below */
+   offset += ftypecount * ftype_extent;
 
-   /* do last filetype */ 
-   i = 0; 
-   while (1)
-   {
-      assert (i < flat_buf->count); 
-      /* is the final byte in this segment? */
-
-      /* if we do not need to update the rtree, quickly skip; 
-       * do not bother to calculate intermediate file ofs */ 
-      if (remainder > flat_buf->blocklens[i])
-      {
-	 remainder -= flat_buf->blocklens[i]; 
-	 ++i; 
-	 continue; 
-      }
-
-      /* add displacement of segment, relative to the beginning of the type  */
-      offset += flat_buf->indices[i] - flat_buf->indices[0]; 
-      assert (remainder < flat_buf->blocklens[i]); 
-      break; 
+   if (remainder == 0) {
+       /* no partial types to worry about, but need to trim off the upper
+	* bound (if exists), since no type will tile after this one */
+       offset -= (ftype_extent - ftype_lb) - last_byte;
+   } else {
+       for (i=0; remainder > 0; i++) {
+	   remainder -= flat_buf->blocklens[i];
+	   offset += flat_buf->indices[i] + flat_buf->blocklens[i];
+       }
    }
-
-   *stop = offset; 
+   *stop = offset;
 }
 
 static int typehelper_decodememtype_contiguous 
