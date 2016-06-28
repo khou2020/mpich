@@ -201,6 +201,11 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
        /* deactivate layering and force replay */
        logfs_deactivate(fh); 
     }
+    /* lastly, deal with a file view in the prefix case, where logfs requested
+     * via 'logfs:' prefix */
+    if (fh->file_system == ADIO_LOGFS) {
+	logfs_set_view(fh, disp, etype, filetype);
+    }
 #endif
 
     /* update view */
