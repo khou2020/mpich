@@ -36,9 +36,6 @@ void ADIOI_LOGFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int 
         *error_code = MPI_SUCCESS;
         break;
     case ADIO_FCNTL_SET_ATOMICITY:
-        assert(0 /*CANNOT GET HERE */);
-        /* the upper level code traps this and disables logfs */
-        break;
     default:
         *error_code = MPIO_Err_create_code(MPI_SUCCESS,
                                            MPIR_ERR_RECOVERABLE,
