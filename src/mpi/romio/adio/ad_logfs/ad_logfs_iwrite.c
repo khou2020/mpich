@@ -56,16 +56,11 @@ void ADIOI_LOGFS_IwriteStrided(ADIO_File fd, const void *buf, int count,
 {
     ADIO_Status status;
     MPI_Count typesize;
-    int myrank, nprocs;
 
-    MPI_Comm_size(fd->comm, &nprocs);
-    MPI_Comm_rank(fd->comm, &myrank);
-    FPRINTF(stdout, "[%d/%d] ADIOI_LOGFS_IwriteStrided called on %s\n",
-            myrank, nprocs, fd->filename);
-    FPRINTF(stdout, "[%d/%d]    calling ADIOI_LOGFS_WriteStrided\n", myrank, nprocs);
     MPI_Type_size_x(datatype, &typesize);
 
-    ADIOI_LOGFS_WriteStrided(fd, buf, count, datatype, file_ptr_type, offset, &status, error_code);
+    ADIOI_LOGFS_WriteStrided(fd, buf, count, datatype, file_ptr_type,
+	    offset, &status, error_code);
 
     MPIO_Completed_request_create(&fd, typesize * count, error_code, request);
 }

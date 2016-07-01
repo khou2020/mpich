@@ -11,6 +11,7 @@
 #include "layered.h"
 #include "logfs.h"
 
+/* here offset has been converted from etypes into bytes */
 void ADIOI_LOGFS_ReadContig(ADIO_File fd, void *buf, int count,
                             MPI_Datatype datatype, int file_ptr_type,
                             ADIO_Offset offset, ADIO_Status * status, int
@@ -27,11 +28,6 @@ void ADIOI_LOGFS_ReadContig(ADIO_File fd, void *buf, int count,
 
     if (file_ptr_type == ADIO_INDIVIDUAL)
         offset = fd->fp_ind;
-
-    offset -= fd->disp;
-    assert((offset % fd->etype_size) == 0);
-    offset /= fd->etype_size;
-
 
     /* read independent */
     ret = logfs_readdata(fd, buf, count, datatype, offset, 0, status);
