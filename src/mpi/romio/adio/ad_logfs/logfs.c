@@ -2059,8 +2059,8 @@ int logfs_readdata(ADIO_File fd, void *buf,
    else
        file = &data->realfile_single;
 
-       MPI_File_set_view (*file, data->view_disp, MPI_BYTE,
-	       data->view_ftype, "native", MPI_INFO_NULL);
+   MPI_File_set_view (*file, data->view_disp, MPI_BYTE,
+	   data->view_ftype, "native", MPI_INFO_NULL);
 
    if (collective) {
     return MPI_File_read_at_all(*file, offset, buf, count, memtype, status);
