@@ -17,14 +17,16 @@
 
 void ADIOI_LOGFS_Open(ADIO_File fd, int *error_code)
 {
+    int ret;
     *error_code = MPI_SUCCESS;
 
-    if (!logfs_activate(fd, fd->info)) {
-        assert(0);
-        /* todo: set error code */
-    };
-
-    /* need to set view so that an entry is made in the logfile describing our
-     * default view*/
-    logfs_set_view(fd, 0, MPI_BYTE, MPI_BYTE);
+    ret = logfs_activate (fd, fd->info);
+    if (ret == MPI_SUCCESS) {
+	/* need to set view so that an entry is made in the logfile describing
+	 * our default view*/
+	logfs_set_view(fd, 0, MPI_BYTE, MPI_BYTE);
+    } else {
+	*error_code = ADIOI_Err_create_code("ADIOI_LOGFS_Open",
+		fd->filename, ret);
+    }
 }

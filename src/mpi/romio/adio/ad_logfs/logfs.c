@@ -127,6 +127,8 @@ struct ADIO_LOGFS_Data {
     /* User replay */
     int user_replay;
     logfs_user_replay_cb user_replay_cb;
+
+   int                  user_amode;
 };
 
 typedef struct ADIO_LOGFS_Data ADIO_LOGFS_Data;
@@ -588,7 +590,7 @@ static int logfs_logfsfile_read(const char *filename, logfs_logfsfile_header * d
  * return true if an existing logfsfile was found;
  * Return false (and create a default one) otherwise
  */
-static int logfs_logfsfile_create(ADIO_LOGFS_Data * data)
+static int logfs_logfsfile_create (ADIO_LOGFS_Data * data, int access_mode)
 {
     int commsize;
     logfs_logfsfile_header h;
@@ -864,31 +866,30 @@ static inline void logfs_safeprefix(const char *name, char *dest, int size)
         ADIOI_Strncpy(dest, name + 6, size);
 }
 
-static void logfs_ensureopen(ADIO_LOGFS_Data * data, MPI_Info info, int collective)
+static int logfs_ensureopen (ADIO_LOGFS_Data * data,
+	MPI_Info info, int collective)
 {
     int err;
     char buf[255];
     if (collective) {
         if (MPI_FILE_NULL != data->realfile_collective)
-            return;
+         return -1;
         logfs_safeprefix(data->realfilename, buf, sizeof(buf));
-        err = MPI_File_open(data->comm, buf, MPI_MODE_RDWR | MPI_MODE_CREATE,
+      err=MPI_File_open (data->comm, buf, data->user_amode,
                             info, &data->realfile_collective);
-        assert(MPI_SUCCESS == err);
-        MPI_File_set_errhandler(data->realfile_collective, MPI_ERRORS_ARE_FATAL);
 
     }
     else {
         if (MPI_FILE_NULL != data->realfile_single)
-            return;
+	    return -1;
         /* think about consistency in this case; probably need to flush these
          * too when the user calls sync */
         logfs_safeprefix(data->realfilename, buf, sizeof(buf));
         err = MPI_File_open(MPI_COMM_SELF, buf,
-                            MPI_MODE_RDWR | MPI_MODE_CREATE, info, &data->realfile_single);
-        assert(MPI_SUCCESS == err);
-        MPI_File_set_errhandler(data->realfile_single, MPI_ERRORS_ARE_FATAL);
+            MPI_MODE_RDWR|MPI_MODE_CREATE,
+	    info, &data->realfile_single);
     }
+   return err;
 }
 
 /* for writes we assume that the memory buffer is continuous and in order
@@ -1322,6 +1323,9 @@ void logfs_setinfo(ADIO_File fd, MPI_Info info)
  *             match and every CPU should be able to open its personal
  *             datalog&metalog
  *       * If the logfsfile doesn't exist, create one
+ *
+ * returns 1 if successful.  If not successful, populates error_code suitable
+ * for handing back up to higher-level ROMIO
  */
 int logfs_activate(ADIO_File fd, MPI_Info info)
 {
@@ -1331,6 +1335,7 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     const int standalone = logfs_standalone(fd);
     int locked;
     int reopen = 0;
+   int                  ret = 1;
 
     ADIO_LOGFS_Data *data = (ADIO_LOGFS_Data *)
       ADIOI_Calloc (1, sizeof(ADIO_LOGFS_Data));
@@ -1403,7 +1408,7 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     }
 
     /* See if the logfs file exists */
-    reopen = logfs_logfsfile_create(data);
+   reopen = logfs_logfsfile_create (data, fd->access_mode); 
 
     if (data->hints.debug) {
         if (!reopen)
@@ -1429,11 +1434,17 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     /* an empty tree is up to date */
     data->rtree_valid = 1;
 
+   data->user_amode = fd->access_mode;
+
 
     if (standalone) {
         fd->fs_ptr = data;
 
-        logfs_ensureopen(data, MPI_INFO_NULL, 1);
+      ret = logfs_ensureopen (data, MPI_INFO_NULL, 1);
+      if (ret != MPI_SUCCESS) {
+	  logfs_deactivate(fd);
+	  goto fn_exit;
+      }
         MPI_File_get_size(data->realfile_collective, &data->filesize);
     }
     else {
@@ -1461,8 +1472,10 @@ int logfs_activate(ADIO_File fd, MPI_Info info)
     /* Assume real file is not valid until the first replay */
     data->file_valid = 0;
     data->user_replay = 0;
+fn_exit:
 
-    return 1;
+   return ret; 
+
 }
 
 /* Remove the logfiles of this CPU; Should only be called with the logfile
