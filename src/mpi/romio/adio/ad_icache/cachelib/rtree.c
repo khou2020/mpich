@@ -433,10 +433,9 @@ void rtree_free_node (rtree_const_handle tree, rtree_node * node, int depth, int
 
 void rtree_free (rtree_handle * rtree)
 {
-   assert (rtree); 
-   assert (*rtree); 
-
-   assert ((*rtree)->root); 
+    if (!rtree) return;
+    if (*rtree == NULL) return;
+    if ((*rtree)->root == NULL) return;
 
    rtree_free_node(*rtree, (*rtree)->root, 0, (*rtree)->depth); 
    (*rtree)->root = 0;   /* rtree_free_node already frees mem */
@@ -446,8 +445,10 @@ void rtree_free (rtree_handle * rtree)
 
 int rtree_empty (rtree_const_handle tree)
 {
-   assert (tree); 
-   return (rtree_get_count (tree) == 0); 
+
+    /* null tree must be empty, right?*/
+    if (!tree) return 1;
+    return (rtree_get_count (tree) == 0);
 }
 
 void rtree_clear (rtree_handle rtree)
@@ -1197,8 +1198,8 @@ int rtree_walk_internal (const rtree_node * node, rtree_callback callback,
 
 int rtree_walk (rtree_const_handle tree, rtree_callback callback, void * extra)
 {
-   assert (tree); 
-   assert (tree->root); 
+    if(tree == NULL) return 1;
+    if (tree->root == NULL) return 1;
 
    return rtree_walk_internal (tree->root, callback, extra, 0, tree->depth); 
 }

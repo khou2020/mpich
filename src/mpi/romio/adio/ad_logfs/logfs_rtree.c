@@ -299,6 +299,8 @@ void logfs_rtree_flush(logfs_rtree * tree, int bufsize,
 {
     logfs_rtree_flush_state state;
 
+   if (!tree->rtree) return;
+
     state.coll = coll;
     state.cbdata = cbdata;
     state.cb = cb;

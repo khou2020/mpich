@@ -188,7 +188,10 @@ void logfs_file_free(logfs_file_handle * handle)
         (*handle)->ops.done((*handle)->ops_data);
     }
 
+   if ((*handle)->etype != MPI_DATATYPE_NULL)
     MPI_Type_free(&(*handle)->etype);
+
+   if ((*handle)->filetype != MPI_DATATYPE_NULL)
     MPI_Type_free(&(*handle)->filetype);
 
     MPI_Comm_free(&(*handle)->comm);

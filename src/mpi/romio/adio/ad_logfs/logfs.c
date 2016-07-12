@@ -1964,6 +1964,7 @@ static void logfs_replay_buildrtree(ADIO_LOGFS_Data * data, int all)
     ops.done = logfs_replay_done;
 
     /* clear out old rtree if any */
+   if (!(data->tree.rtree) ) return;
     rtree_clear(data->tree.rtree);
     data->tree.rangesize = 0;
 
