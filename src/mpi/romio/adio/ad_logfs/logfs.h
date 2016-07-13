@@ -66,8 +66,8 @@ int logfs_activate(ADIO_File fd, MPI_Info info);
 /* collective; logfs deactivate */
 int logfs_deactivate(ADIO_File fd);
 
-/* collective; deletes log files associated with the given file */
-int logfs_delete(MPI_Comm comm, const char *filename);
+/* deletes log files associated with the given file */
+int logfs_delete (const char * filename);
 
 
 /* return true if the given filename has a logfs log attached */

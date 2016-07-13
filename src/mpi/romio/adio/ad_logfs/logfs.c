@@ -722,9 +722,9 @@ int logfs_probe(MPI_Comm comm, const char *filename)
     return ret;
 }
 
-/* called by the MPI-IO delete function when a logfs file is detected */
-/* should only be called by one cpu */
-int logfs_delete(MPI_Comm comm, const char *filename)
+/* called by the MPI-IO delete function when a logfs file is detected
+ * Only deletes the .meta, .data, and .logfs files */
+int logfs_delete (const char * filename)
 {
     int rank;
     char buf[255];
@@ -733,8 +733,6 @@ int logfs_delete(MPI_Comm comm, const char *filename)
     int i;
     int err;
     MPI_Status status;
-
-    MPI_Comm_rank(comm, &rank);
 
     /* see if the file is locked */
     /* TODO */
@@ -780,7 +778,6 @@ int logfs_delete(MPI_Comm comm, const char *filename)
         logfs_logfilename(header.logfilebase, buf, sizeof(buf) - 1, i, LOGFS_FILE_LOG_DATA);
         MPI_File_delete(buf, MPI_INFO_NULL);
     }
-    MPI_Barrier(comm);
     return 1;
 }
 
