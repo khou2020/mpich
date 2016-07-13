@@ -868,18 +868,18 @@ static int logfs_ensureopen (ADIO_LOGFS_Data * data,
         logfs_safeprefix(data->realfilename, buf, sizeof(buf));
       err=MPI_File_open (data->comm, buf, data->user_amode,
                             info, &data->realfile_collective);
+      if (err != MPI_SUCCESS) goto fn_exit;
 
     }
-    else {
-        if (MPI_FILE_NULL != data->realfile_single)
-	    return -1;
-        /* think about consistency in this case; probably need to flush these
-         * too when the user calls sync */
-        logfs_safeprefix(data->realfilename, buf, sizeof(buf));
-        err = MPI_File_open(MPI_COMM_SELF, buf,
-            MPI_MODE_RDWR|MPI_MODE_CREATE,
+    if (MPI_FILE_NULL != data->realfile_single)
+	return -1;
+    /* think about consistency in this case; probably need to flush these
+     * too when the user calls sync */
+    logfs_safeprefix(data->realfilename, buf, sizeof(buf));
+    err = MPI_File_open(MPI_COMM_SELF, buf,
+	    MPI_MODE_RDWR|MPI_MODE_CREATE,
 	    info, &data->realfile_single);
-    }
+fn_exit:
    return err;
 }
 
