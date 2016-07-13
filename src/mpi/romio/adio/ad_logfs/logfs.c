@@ -893,7 +893,6 @@ static int logfs_ensureopen (ADIO_LOGFS_Data * data,
  * However we need to set the filetype which is collective! */
 static int logfs_flush_writestart(void *buf, MPI_Datatype filetype, int bytes, void *userdata)
 {
-    int err;
     logfs_flushtree_state *state = (logfs_flushtree_state *) userdata;
     MPI_File handle = (state->collective ? state->logfsdata->realfile_collective :
                        state->logfsdata->realfile_single);
@@ -906,10 +905,10 @@ static int logfs_flush_writestart(void *buf, MPI_Datatype filetype, int bytes, v
         assert(MPI_FILE_NULL != handle);
     }
 
-    err = MPI_File_set_view(handle, 0, MPI_BYTE, filetype, "native", state->writeinfo);
-    assert(MPI_SUCCESS == err);
-    err = MPI_File_iwrite_at(handle, 0, buf, bytes, MPI_BYTE, &state->writereq);
-    assert(MPI_SUCCESS == err);
+   checkError(MPI_File_set_view (handle, 0, MPI_BYTE, filetype,
+	       "native", state->writeinfo));
+   checkError(MPI_File_iwrite_at (handle, 0, buf, bytes,
+	       MPI_BYTE, &state->writereq));
 
     return 1;
 }
