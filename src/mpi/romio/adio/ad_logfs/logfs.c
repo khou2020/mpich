@@ -209,13 +209,8 @@ static int logfs_writering_mpi_init(void *opsdata, int read, int write)
     checkError(MPI_Info_set(info, "access_style", "sequential"));
 
     flags = MPI_MODE_UNIQUE_OPEN | MPI_MODE_CREATE;
-    if (read && write) {
-        flags |= MPI_MODE_RDWR;
-    }
-    else {
-        assert(write);  /* read only mode doesn't make sense? */
-        flags |= MPI_MODE_WRONLY;
-    }
+   /* cannot use tighter permissions due to replay-on-close */
+   flags |= MPI_MODE_RDWR;
 
     /* Are MPI_File functions reentrant?? */
     checkError(MPI_File_open(MPI_COMM_SELF, data->filename, flags, info, &data->file));
@@ -344,7 +339,6 @@ static int logfs_writering_mpi_start_read(void *opsdata, WRR_OFFSET ofs, void *r
     writering_mpi_data *data = (writering_mpi_data *) opsdata;
 
     assert(MPI_FILE_NULL != data->file);
-    assert(data->readopen);
 
     assert(data->readreq == MPI_REQUEST_NULL);
 
@@ -636,9 +630,10 @@ static int logfs_logfsfile_create (ADIO_LOGFS_Data * data, int access_mode)
             reopen = 0;
         }
 
-        /* Open file for writing */
+      /* Open file for writing.  Replay-on-close might require reading the
+       * header, so we cannot open write-only  */
         checkError(MPI_File_open(MPI_COMM_SELF, data->logfsfilename,
-                                 MPI_MODE_CREATE | MPI_MODE_WRONLY,
+               MPI_MODE_CREATE|MPI_MODE_RDWR,
                                  MPI_INFO_NULL, &data->logfsfilehandle));
         logfs_logfsfile_update(data);
     }
@@ -726,7 +721,6 @@ int logfs_probe(MPI_Comm comm, const char *filename)
  * Only deletes the .meta, .data, and .logfs files */
 int logfs_delete (const char * filename)
 {
-    int rank;
     char buf[255];
     MPI_File handle;
     logfs_logfsfile_header header;
@@ -1504,8 +1498,9 @@ int logfs_deactivate(ADIO_File fd)
     if (data->hints.debug)
         debuginfo("Deactivating logfs (replay=%u) on %s\n", replay, fd->filename);
 
-    /* collective replay */
-    if (replay) {
+   /* collective replay: no need to replay if no writes */
+   if (replay && !(data->user_amode & MPI_MODE_RDONLY))
+   {
         logfs_replay(fd, 1);
     }
 
@@ -2052,7 +2047,11 @@ int logfs_readdata(ADIO_File fd, void *buf,
     MPI_File *file;
 
 
-    if (!data->file_valid) {
+   /* what does it mean to replay a log file when the file is opened read-only?
+    * We will have to assume the user knows what he/she asked for (hah!), and
+    * that something else replayed the file already (as in replay-on-close). */
+   if (!data->file_valid && !(data->user_amode & MPI_MODE_RDONLY))
+   {
         /* If the file is not valid, replay once;
          * Keep the file marked as valid until the first write operation */
 
