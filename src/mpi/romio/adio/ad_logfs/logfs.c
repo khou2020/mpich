@@ -1909,14 +1909,32 @@ static int logfs_replay_write(void *data, ADIO_Offset writeofs, int size, ADIO_O
     ftypecount = size / rep->ftype_size;
     ftyperemainder = size % rep->ftype_size;
 
+
     /* we have a flatbuf rep */
-    for (i = 0; i < ftypecount; ++i) {
-        for (j = 0; j < rep->ftype->count; ++j) {
-            fileofs = ofs + i * rep->ftype_extent + rep->ftype->indices[j] - rep->ftype->indices[0];
+   /* MPI-IO file views can be tiled */
+   for (i=0; i<ftypecount; ++i)
+   {
+       /* examine each element of the flattened representation */
+      for (j=0; j<rep->ftype->count; ++j)
+      {
+	  /* fileofs: offset in canonical file.  Computation was wrong for
+	   * cases where datatype lower bound was non-zero:
+	   * - ofs: user-provided offset of this request.  we got that value
+	   * directly from the .meta log file
+	   * - i*rep->ftype_extent: the idiomantic way to deal with tiled file
+	   *   views
+	   * - rep->ftype->indices[j] - rep->ftype->indices[0]:  When
+	   * indices[0] is zero (when lower bound is zero), this does nothing.
+	   * When lower bound is non-zero this adjusts the offsets relative to
+	   * the lower bound.  However the offsets do not need adjusting! */
 
-            logfs_rtree_addsplit(rep->tree,
-                                 fileofs, fileofs + rep->ftype->blocklens[j], datalogstart);
+	 fileofs = ofs + i*rep->ftype_extent +
+	    rep->ftype->indices[j];
 
+	 logfs_rtree_addsplit(rep->tree,
+		 fileofs, fileofs + rep->ftype->blocklens[j], datalogstart);
+
+	 /* datalogstart: posistion in .data file */
             datalogstart += rep->ftype->blocklens[j];
         }
     }
