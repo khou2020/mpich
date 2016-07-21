@@ -61,7 +61,8 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
 	if (filetype_is_contig) fd->fp_ind = disp;
 	else {
 	    if (fd->file_system == ADIO_LOGFS) {
-	    /* skip this processing for logfs.  A logfs write will already take
+		fd->fp_ind = disp;
+	    /* skip the type processing for logfs.  A logfs write will already take
 	     * into account the lower bound markers */
 		;
 	    } else {
