@@ -78,4 +78,5 @@ romio_other_sources +=                  \
     adio/common/layered.c  \
     adio/common/memstack.c\
     adio/common/typehelper.c\
-    adio/common/writering.c
+    adio/common/writering.c \
+    adio/common/rtree.c

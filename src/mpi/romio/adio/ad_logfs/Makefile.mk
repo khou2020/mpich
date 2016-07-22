@@ -7,7 +7,7 @@
 
 if BUILD_AD_LOGFS
 
-AM_CPPFLAGS += -I$(top_srcdir)/adio/ad_logfs -I$(top_srcdir)/adio/ad_icache/cachelib
+AM_CPPFLAGS += -I$(top_srcdir)/adio/ad_logfs
 
 noinst_HEADERS += adio/ad_logfs/ad_logfs_common.h\
 		  adio/ad_logfs/ad_logfs.h\
@@ -16,8 +16,7 @@ noinst_HEADERS += adio/ad_logfs/ad_logfs_common.h\
 		  adio/ad_logfs/logfs_info.h\
 		  adio/ad_logfs/logfs_rtree.h\
 		  adio/ad_logfs/logfs_user.h\
-		  adio/ad_logfs/rtree_config.h \
-                  adio/ad_icache/cachelib/rtree.h
+		  adio/ad_logfs/rtree_config.h
 
 romio_other_sources += adio/ad_logfs/ad_logfs.c \
 		       adio/ad_logfs/ad_logfs_close.c \
