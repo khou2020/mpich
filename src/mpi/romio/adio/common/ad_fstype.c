@@ -174,6 +174,19 @@ static struct ADIO_FSTypes fstypes[] = {
    { 0, 0, 0} /* guard entry */
 }; 
 
+/* return a pointer to the filesystem prefix
+ * Return 0 if not found */
+const char * ADIO_FileTypeToPrefix (int filetype)
+{
+   int i=0;
+   while (fstypes[i].fileops)
+   {
+      if (fstypes[i].fstype == filetype)
+         return fstypes[i].prefix;
+      ++i;
+   }
+   return 0;
+}
 
 /*
  ADIO_FileSysType_parentdir - determines a string pathname for the
@@ -189,20 +202,6 @@ Output Parameters:
  after the string is no longer needed.
 */
 #ifdef ROMIO_NEEDS_ADIOPARENTDIR
-
-/* return a pointer to the filesystem prefix
- * Return 0 if not found */
-const char * ADIO_FileTypeToPrefix (int filetype)
-{
-   int i=0;
-   while (fstypes[i].fileops)
-   {
-      if (fstypes[i].fstype == filetype)
-         return fstypes[i].prefix;
-      ++i;
-   }
-   return 0;
-}
 
 /* In a strict ANSI environment, S_ISLNK may not be defined.  Fix that
    here.  We assume that S_ISLNK is *always* defined as a macro.  If
