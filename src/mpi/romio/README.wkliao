@@ -1,0 +1,43 @@
+To build ROMIO stand-alone version on Cori:
+
+1. clone source codes:
+   git clone --recursive https://github.com/roblatham00/mpich.git
+
+2. Initialize all MPICH build scripts by running commands:
+   cd mpich
+   ./autogen.sh
+
+3. copy the folder mpich/src/mpi/romio to somewhere else, say
+   $HOME/LOGFS/ROMIO/romio-robl
+
+4. A compile-time error shown below needs to be fixed. Edit the file to
+   comment it out.
+   mpi-io/glue/mpich/mpio_err.c(12): catastrophic error: cannot open source file "mpir_ext.h"
+   #include "mpir_ext.h"
+   compilation aborted for ../romio-robl/mpi-io/glue/mpich/mpio_err.c (code 4)
+
+5. A link error shown below needs to be fixed.
+   % cc -g mpi_file_info.c -o mpi_file_info -Iinclude -Llib -lromio
+   lib/libromio.a(shfp_fname.o): In function `ADIOI_Shfp_fname':
+   shfp_fname.c:(.text+0x1b6): undefined reference to `MPL_strnapp'
+
+   The fix is to copy function MPL_strnapp from MPICH source file
+   mpich/src/pm/hydra/mpl/src/str/mpl_str.cs
+   to file
+   romio-robl/romio/adio/common/shfp_fname.c
+
+6. build recipe:
+   ../romio-robl/configure --prefix=$HOME/LOGFS \
+                           --with-file-system=ufs+lustre \
+                           --with-mpi-impl=MPICH \
+                           CC=cc \
+                           --disable-shared \
+                           --disable-f77 \
+                           --disable-f90
+
+7. To compile your application programs, Darshan module must be unloaded.
+   Run command "module unload darshan".
+
+8. Run your compile command:
+   % cc -g mpi_file_info.c -o mpi_file_info -I$HOME/LOGFS/include -L$HOME/LOGFS/lib -lromio
+

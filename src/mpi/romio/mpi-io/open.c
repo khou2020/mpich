@@ -59,6 +59,11 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     HPMP_IO_OPEN_START(fl_xmpi, comm);
 #endif /* MPI_hpux */
 
+    MPI_Comm_rank(comm, &rank);
+    if(rank == 0){
+        printf("Using logfs-in-romio\n");
+    }
+
     ROMIO_THREAD_CS_ENTER();
 
     /* --BEGIN ERROR HANDLING-- */
