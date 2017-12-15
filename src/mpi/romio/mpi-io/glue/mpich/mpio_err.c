@@ -9,7 +9,7 @@
 
 #include "mpioimpl.h"
 #include "adio_extern.h"
-//#include "mpir_ext.h"
+// #include "mpir_ext.h"
 
 int MPIO_Err_create_code(int lastcode, int fatal, const char fcname[],
 			 int line, int error_class, const char generic_msg[],

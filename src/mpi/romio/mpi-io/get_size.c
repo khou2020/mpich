@@ -38,7 +38,7 @@ Output Parameters:
 @*/
 int MPI_File_get_size(MPI_File fh, MPI_Offset *size)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     ADIO_Fcntl_t *fcntl_struct;
     static char myname[] = "MPI_FILE_GET_SIZE";

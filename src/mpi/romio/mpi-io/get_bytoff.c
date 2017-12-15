@@ -42,7 +42,7 @@ Output Parameters:
 @*/
 int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_BYTE_OFFSET";
 
@@ -67,5 +67,5 @@ int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp)
 
 fn_exit:
 
-    return MPI_SUCCESS;
+    return error_code;
 }

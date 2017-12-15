@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_SET_SIZE";
     MPI_Offset tmp_sz, max_sz, min_sz;

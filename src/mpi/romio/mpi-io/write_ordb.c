@@ -42,7 +42,7 @@ Output Parameters:
 int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
 				 MPI_Datatype datatype)
 {
-    int error_code, nprocs, myrank;
+    int error_code=MPI_SUCCESS, nprocs, myrank;
     ADIO_Offset incr;
     MPI_Count datatype_size;
     int source, dest;

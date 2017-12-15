@@ -56,7 +56,7 @@ void MPIR_MPIOInit(int * error_code);
 #ifdef HAVE_MPIIO_CONST
 #define ROMIO_CONST const
 #else
-#define ROMIO_CONST
+#define ROMIO_CONST const
 #endif
 
 #include "mpiu_external32.h"

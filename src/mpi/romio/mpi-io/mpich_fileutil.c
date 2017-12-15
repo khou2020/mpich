@@ -32,7 +32,7 @@ int MPIR_ROMIO_Set_file_errhand( MPI_File file_ptr, MPI_Errhandler e )
     /* --END ERROR HANDLING-- */
     else 
 	file_ptr->err_handler = e;
-    return 0;
+    return MPI_SUCCESS;
 }
 int MPIR_ROMIO_Get_file_errhand( MPI_File file_ptr, MPI_Errhandler *e )
 {
@@ -54,7 +54,7 @@ int MPIR_ROMIO_Get_file_errhand( MPI_File file_ptr, MPI_Errhandler *e )
 	else
 	    *e = file_ptr->err_handler;
     }
-    return 0;
+    return MPI_SUCCESS;
 }
 
 #endif /* MPICH */

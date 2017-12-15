@@ -73,7 +73,7 @@ int MPIOI_File_write(MPI_File fh,
 		     char *myname,
 		     MPI_Status *status)
 {		      
-    int error_code, buftype_is_contig, filetype_is_contig;
+    int error_code=MPI_SUCCESS, buftype_is_contig, filetype_is_contig;
     MPI_Count datatype_size;
     ADIO_Offset off, bufsize;
     ADIO_File adio_fh;

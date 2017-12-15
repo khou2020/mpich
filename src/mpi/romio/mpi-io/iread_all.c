@@ -47,7 +47,7 @@ Output Parameters:
 int MPI_File_iread_all(MPI_File fh, void *buf, int count,
                        MPI_Datatype datatype, MPI_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD_ALL";
 #ifdef MPI_hpux
     int fl_xmpi;
@@ -84,7 +84,7 @@ int MPIOI_File_iread_all(MPI_File fh,
             char *myname,
             MPI_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     MPI_Count datatype_size;
     ADIO_File adio_fh;
     void *xbuf=NULL, *e32_buf=NULL;

@@ -41,7 +41,7 @@ Output Parameters:
 @*/
 int MPI_File_get_position(MPI_File fh, MPI_Offset *offset)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_POSITION";
 
@@ -55,5 +55,5 @@ int MPI_File_get_position(MPI_File fh, MPI_Offset *offset)
     ADIOI_Get_position(adio_fh, offset);
 
 fn_exit:
-    return MPI_SUCCESS;
+    return error_code;
 }

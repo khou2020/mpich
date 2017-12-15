@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 {
-    int error_code, file_system;
+    int error_code=MPI_SUCCESS, file_system;
     char *tmp;
     ADIOI_Fns *fsops;
 #ifdef MPI_hpux

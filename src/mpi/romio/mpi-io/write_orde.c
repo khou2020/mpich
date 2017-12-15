@@ -39,7 +39,7 @@ Output Parameters:
 @*/
 int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status *status)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_WRITE_ORDERED_END";
     ADIO_File adio_fh;
 
@@ -71,5 +71,5 @@ int MPI_File_write_ordered_end(MPI_File fh, ROMIO_CONST void *buf, MPI_Status *s
 
 fn_exit:
     ROMIO_THREAD_CS_EXIT();
-    return MPI_SUCCESS;
+    return error_code;
 }

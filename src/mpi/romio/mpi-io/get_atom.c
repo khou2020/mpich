@@ -51,5 +51,5 @@ int MPI_File_get_atomicity(MPI_File fh, int *flag)
     *flag = adio_fh->atomicity;
 
 fn_exit:
-    return MPI_SUCCESS;
+    return error_code;
 }

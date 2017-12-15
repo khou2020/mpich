@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_sync(MPI_File fh)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_SYNC";
 #ifdef MPI_hpux

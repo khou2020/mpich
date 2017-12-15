@@ -39,7 +39,7 @@ Output Parameters:
 @*/
 int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_POSITION_SHARED";
 

@@ -54,7 +54,7 @@ int MPIOI_File_write_all_end(MPI_File fh,
 			     char *myname,
 			     MPI_Status *status)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
 
     MPL_UNREFERENCED_ARG(buf);

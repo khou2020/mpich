@@ -75,7 +75,7 @@ int MPIOI_File_write_all(MPI_File fh,
 			 char *myname,
 			 MPI_Status *status)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     MPI_Count datatype_size;
     ADIO_File adio_fh;
     void *e32buf=NULL;

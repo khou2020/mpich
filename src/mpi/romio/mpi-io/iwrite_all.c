@@ -47,7 +47,7 @@ Output Parameters:
 int MPI_File_iwrite_all(MPI_File fh, ROMIO_CONST void *buf, int count,
                         MPI_Datatype datatype, MPI_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IWRITE_ALL";
 #ifdef MPI_hpux
     int fl_xmpi;
@@ -78,7 +78,7 @@ int MPIOI_File_iwrite_all(MPI_File fh,
             char *myname,
             MPI_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     MPI_Count datatype_size;
     ADIO_File adio_fh;
     void *e32buf=NULL;

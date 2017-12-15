@@ -45,7 +45,7 @@ Output Parameters:
 int MPI_File_read_ordered(MPI_File fh, void *buf, int count,
                           MPI_Datatype datatype, MPI_Status *status)
 {
-    int error_code, nprocs, myrank;
+    int error_code=MPI_SUCCESS, nprocs, myrank;
     ADIO_Offset incr;
     MPI_Count datatype_size;
     int source, dest;

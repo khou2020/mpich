@@ -44,7 +44,7 @@ int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 #else
 int MPIO_Wait(MPIO_Request *request, MPI_Status *status)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPIO_WAIT";
 
 #ifdef MPI_hpux

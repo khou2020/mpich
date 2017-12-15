@@ -43,7 +43,7 @@ Output Parameters:
 int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype,
                       MPI_Datatype *filetype, char *datarep)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_VIEW";
     int i, j, k, combiner;
@@ -95,5 +95,5 @@ int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype,
 fn_exit:
     ROMIO_THREAD_CS_EXIT();
 
-    return MPI_SUCCESS;
+    return error_code;
 }

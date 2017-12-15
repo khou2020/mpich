@@ -66,5 +66,5 @@ int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
 
 fn_exit:
     ROMIO_THREAD_CS_EXIT();
-    return MPI_SUCCESS;
+    return error_code;
 }

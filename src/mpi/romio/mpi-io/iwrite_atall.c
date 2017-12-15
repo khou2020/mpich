@@ -49,7 +49,7 @@ int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf
                            int count, MPI_Datatype datatype,
                            MPI_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IWRITE_AT_ALL";
 #ifdef MPI_hpux
     int fl_xmpi;

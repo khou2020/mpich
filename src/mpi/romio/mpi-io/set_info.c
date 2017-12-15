@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_set_info(MPI_File fh, MPI_Info info)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_SET_INFO";
     ADIO_File adio_fh;
 

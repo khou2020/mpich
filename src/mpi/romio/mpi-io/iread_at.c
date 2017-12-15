@@ -48,7 +48,7 @@ Output Parameters:
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype, 
                       MPIO_Request *request)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     static char myname[] = "MPI_FILE_IREAD_AT";
 
 #ifdef MPI_hpux

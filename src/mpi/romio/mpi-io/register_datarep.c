@@ -58,7 +58,7 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
 			 MPI_Datarep_extent_function *dtype_file_extent_fn,
 			 void *extra_state)
 {
-    int error_code;
+    int error_code=MPI_SUCCESS;
     ADIOI_Datarep *adio_datarep;
     static char myname[] = "MPI_REGISTER_DATAREP";
 
