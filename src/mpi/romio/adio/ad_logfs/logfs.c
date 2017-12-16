@@ -157,7 +157,8 @@ static inline int checkError(int ret)
 
     MPI_Error_string(ret, msg, &resultlen);
     debuginfo("%s\n", msg);
-    MPL_backtrace_show(stderr);
+    // Disabled for indep build
+    //MPL_backtrace_show(stderr);
     assert(0);
    return -1;
 }

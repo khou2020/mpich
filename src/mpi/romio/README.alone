@@ -18,17 +18,33 @@ To build ROMIO stand-alone version on Cori:
    #include "mpir_ext.h"
    compilation aborted for ../romio-robl/mpi-io/glue/mpich/mpio_err.c (code 4)
 
-6. A link error shown below needs to be fixed.
-   % cc -g mpi_file_info.c -o mpi_file_info -Iinclude -Llib -lromio
+6. Several link errors shown below needs to be fixed.
+   cc  -O2 logfs.c mpiwrite.c maxidx.c printinfo.c -I/global/homes/k/khl7265/local/romio_logfs/include /global/homes/k/khl7265/local/romio_logfs/lib/libromio.a -o logfs
+   
    lib/libromio.a(shfp_fname.o): In function `ADIOI_Shfp_fname':
    shfp_fname.c:(.text+0x1b6): undefined reference to `MPL_strnapp'
-
-   The fix is to copy function MPL_strnapp from MPICH source file
-   mpich/src/pm/hydra/mpl/src/str/mpl_str.c
-   to file
-   romio-robl/adio/common/shfp_fname.c
-
-7. build recipe:
+   
+   /global/homes/k/khl7265/local/romio_logfs/lib/libromio.a(mpio_err.o): In function `MPIO_Err_return_file':
+   mpio_err.c:(.text+0x172): undefined reference to `MPIR_Abort'
+   
+   /global/homes/k/khl7265/local/romio_logfs/lib/libromio.a(logfs.o): In function `logfs_writering_mpi_done':
+   logfs.c:(.text+0x6b): undefined reference to `MPL_backtrace_show'
+   ...
+   ... # many undefined reference to `MPL_backtrace_show' errors
+   ...
+   /global/homes/k/khl7265/local/romio_logfs/lib/libromio.a(logfs.o):logfs.c:(.text+0x5e5): more undefined references to `MPL_backtrace_show' follow
+    
+   Follow these steps to fix
+   1. Copy function MPL_strnapp from MPICH source file
+        mpich/src/pm/hydra/mpl/src/str/mpl_str.c
+      to file
+        romio-robl/adio/common/shfp_fname.c
+   2. Comment line 160 of adio/ad_logfs/logfs.c out
+      //MPL_backtrace_show(stderr);
+   3. Comment line 82 of mpi-io/glue/mpich/mpio_err.c out
+      //MPIR_Abort(fh->comm, MPI_SUCCESS, error_code, error_msg);
+   
+7. build recipe on cori:
    ../romio-robl/configure --prefix=$HOME/LOGFS \
                            --with-file-system=ufs+lustre \
                            --with-mpi-impl=MPICH \
