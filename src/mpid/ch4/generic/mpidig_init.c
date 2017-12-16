@@ -26,11 +26,9 @@ int MPIDIG_am_reg_cb(int handler_id,
 
     MPIDIG_global.target_msg_cbs[handler_id] = target_msg_cb;
     MPIDIG_global.origin_cbs[handler_id] = origin_cb;
-  fn_exit:
+
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIG_AM_REG_CB);
     return mpi_errno;
-  fn_fail:
-    goto fn_exit;
 }
 
 #undef FUNCNAME

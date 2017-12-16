@@ -55,7 +55,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 
     /* resolve file system type from file name; this is a collective call */
     ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, 
-			 &error_code);
+                        &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
@@ -77,6 +77,9 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     tmp = strchr(filename, ':');
     if (tmp > filename + 1)
 	filename = tmp + 1;
+
+    /* TODO: if doing layering -> interfere here 
+     * (see MPI_Open for example) */
 
     /* call the fs-specific delete function */
     (fsops->ADIOI_xxx_Delete)(filename, &error_code);

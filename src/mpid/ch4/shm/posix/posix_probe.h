@@ -14,7 +14,7 @@
 #include "posix_impl.h"
 
 
-static inline int MPIDI_SHM_mpi_improbe(int source,
+static inline int MPIDI_POSIX_mpi_improbe(int source,
                                         int tag,
                                         MPIR_Comm * comm,
                                         int context_offset,
@@ -24,8 +24,8 @@ static inline int MPIDI_SHM_mpi_improbe(int source,
     MPIR_Request *req, *matched_req = NULL;
     int count = 0;
 
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_IMPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_IMPROBE);
 
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     *message = NULL;
@@ -85,16 +85,16 @@ static inline int MPIDI_SHM_mpi_improbe(int source,
     }
     else {
         *flag = 0;
-        MPIDI_Progress_test();
+        MPID_Progress_test();
     }
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IMPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IMPROBE);
     return mpi_errno;
 }
 
-static inline int MPIDI_SHM_mpi_iprobe(int source,
+static inline int MPIDI_POSIX_mpi_iprobe(int source,
                                        int tag,
                                        MPIR_Comm * comm,
                                        int context_offset, int *flag, MPI_Status * status)
@@ -102,8 +102,8 @@ static inline int MPIDI_SHM_mpi_iprobe(int source,
     int mpi_errno = MPI_SUCCESS;
     MPIR_Request *req, *matched_req = NULL;
     int count = 0;
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_POSIX_MPI_IPROBE);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_POSIX_MPI_IPROBE);
     MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
 
     if (unlikely(source == MPI_PROC_NULL)) {
@@ -133,13 +133,13 @@ static inline int MPIDI_SHM_mpi_iprobe(int source,
     else {
         *flag = 0;
         MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-        MPIDI_Progress_test();
+        MPID_Progress_test();
         MPID_THREAD_CS_ENTER(POBJ, MPIDI_POSIX_SHM_MUTEX);
     }
 
   fn_exit:
     MPID_THREAD_CS_EXIT(POBJ, MPIDI_POSIX_SHM_MUTEX);
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_SHM_MPI_IPROBE);
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_POSIX_MPI_IPROBE);
     return mpi_errno;
 }
 

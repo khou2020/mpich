@@ -36,12 +36,14 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_init_comm(MPIR_Comm * comm)
      * Prevents double initialization of some special communicators.
      *
      * comm_world and comm_self may exhibit this function twice, first during MPIDI_CH4U_mpi_init
-     * and the second during MPIR_Comm_commit in MPIDI_Init.
+     * and the second during MPIR_Comm_commit in MPID_Init.
      * If there is an early arrival of an unexpected message before the second visit,
      * the following code will wipe out the unexpected queue andthe message is lost forever.
      */
     if (unlikely(MPIDI_CH4_Global.is_ch4u_initialized &&
                  (comm == MPIR_Process.comm_world || comm == MPIR_Process.comm_self)))
+        goto fn_exit;
+    if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
         goto fn_exit;
 
     comm_idx = MPIDI_CH4U_get_context_index(comm->recvcontext_id);
@@ -81,6 +83,8 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
 
+    if (MPIR_CONTEXT_READ_FIELD(DYNAMIC_PROC, comm->recvcontext_id))
+        goto fn_exit;
     comm_idx = MPIDI_CH4U_get_context_index(comm->recvcontext_id);
     subcomm_type = MPIR_CONTEXT_READ_FIELD(SUBCOMM, comm->recvcontext_id);
     is_localcomm = MPIR_CONTEXT_READ_FIELD(IS_LOCALCOMM, comm->recvcontext_id);
@@ -97,7 +101,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_CH4U_destroy_comm(MPIR_Comm * comm)
     }
     MPIDI_CH4_Global.comm_req_lists[comm_idx].comm[is_localcomm][subcomm_type] = NULL;
 
-
+  fn_exit:
     MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_CH4U_DESTROY_COMM);
     return mpi_errno;
 }

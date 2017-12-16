@@ -22,28 +22,53 @@ MPIDI_av_table_t *MPIDI_av_table0;
 MPIDI_NM_funcs_t *MPIDI_NM_func;
 MPIDI_NM_native_funcs_t *MPIDI_NM_native_func;
 
-#ifdef MPIDI_BUILD_CH4_SHM
-MPIDI_SHM_funcs_t *MPIDI_SHM_func;
-MPIDI_SHM_native_funcs_t *MPIDI_SHM_native_func;
-#endif
-
 #ifdef MPID_DEVICE_DEFINES_THREAD_CS
 pthread_mutex_t MPIDI_Mutex_lock[MPIDI_NUM_LOCKS];
 #endif
 
-/* The MPID_Abort ADI is strangely defined by the upper layers */
-/* We should fix the upper layer to define MPID_Abort like any */
-/* Other ADI */
-#ifdef MPID_Abort
-#define MPID_TMP MPID_Abort
-#undef MPID_Abort
-int MPID_Abort(MPIR_Comm * comm, int mpi_errno, int exit_code, const char *error_msg)
+#undef FUNCNAME
+#define FUNCNAME MPID_Abort
+#undef FCNAME
+#define FCNAME MPL_QUOTE(FUNCNAME)
+int MPID_Abort(MPIR_Comm * comm,
+               int mpi_errno, int exit_code, const char *error_msg)
 {
-    return MPIDI_Abort(comm, mpi_errno, exit_code, error_msg);
-}
+    char sys_str[MPI_MAX_ERROR_STRING + 5] = "";
+    char comm_str[MPI_MAX_ERROR_STRING] = "";
+    char world_str[MPI_MAX_ERROR_STRING] = "";
+    char error_str[2 * MPI_MAX_ERROR_STRING + 128];
+    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ABORT);
+    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ABORT);
 
-#define MPID_Abort MPID_TMP
-#endif
+    if (MPIR_Process.comm_world) {
+        int rank = MPIR_Process.comm_world->rank;
+        snprintf(world_str, sizeof(world_str), " on node %d", rank);
+    }
+
+    if (comm) {
+        int rank = comm->rank;
+        int context_id = comm->context_id;
+        snprintf(comm_str, sizeof(comm_str), " (rank %d in comm %d)", rank, context_id);
+    }
+
+    if (!error_msg)
+        error_msg = "Internal error";
+
+    if (mpi_errno != MPI_SUCCESS) {
+        char msg[MPI_MAX_ERROR_STRING] = "";
+        MPIR_Err_get_string(mpi_errno, msg, MPI_MAX_ERROR_STRING, NULL);
+        snprintf(sys_str, sizeof(msg), " (%s)", msg);
+    }
+    MPL_snprintf(error_str, sizeof(error_str), "Abort(%d)%s%s: %s%s\n",
+                 exit_code, world_str, comm_str, error_msg, sys_str);
+    MPL_error_printf("%s", error_str);
+
+    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ABORT);
+    fflush(stderr);
+    fflush(stdout);
+    PMI_Abort(exit_code, error_msg);
+    return 0;
+}
 
 /* Another weird ADI that doesn't follow convention */
 static void init_comm() __attribute__ ((constructor));

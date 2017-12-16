@@ -49,4 +49,19 @@ extern struct ADIOI_Fns_struct ADIO_GPFS_operations;
 /* prototypes are in adio/ad_gpfs/ad_gpfs.h */
 #endif
 
+#ifdef ROMIO_ICACHE
+extern struct ADIOI_Fns_struct ADIO_ICACHE_operations;
+/* prototypes are in adio/ad_icache/ad_icache.h */
+#endif
+
+#ifdef ROMIO_TRACE
+extern struct ADIOI_Fns_struct ADIO_TRACE_operations;
+/* prototypes are in adio/ad_trace/ad_trace.h */
+#endif
+
+#ifdef ROMIO_LOGFS
+extern struct ADIOI_Fns_struct ADIO_LOGFS_operations;
+#endif
+
+
 #endif

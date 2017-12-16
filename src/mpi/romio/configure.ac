@@ -185,7 +185,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [nfs ufs pvfs2 testfs xfs panfs lustre gpfs])dnl
+          [nfs ufs pvfs2 testfs xfs panfs lustre gpfs logfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -745,8 +745,9 @@ if test -z "$FILE_SYSTEM" ; then
     FILE_SYSTEM="ufs nfs"
 fi
 
-# no matter what, always build testfs
-FILE_SYSTEM="testfs $FILE_SYSTEM"
+# no matter what, always build testfs and logfs
+file_system_logfs=1
+FILE_SYSTEM="testfs logfs $FILE_SYSTEM"
 
 # check for valid file system
 if test -n "$FILE_SYSTEM" ; then
@@ -888,6 +889,11 @@ if test -n "$file_system_lustre"; then
         AC_MSG_ERROR([LUSTRE support requested but cannot find lustre/lustre_user.h header file])                                        
     )
 fi
+
+if test -n "$file_system_logfs"; then
+   AC_DEFINE(ROMIO_LOGFS,1,[Define for ROMIO with LOGFS])
+fi
+
 
 if test -n "$file_system_xfs"; then
     AC_DEFINE(ROMIO_XFS,1,[Define for ROMIO with XFS])

@@ -26,6 +26,10 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Data
 #include "mpioprof.h"
 #endif
 
+#ifdef ROMIO_LOGFS
+#include "../adio/ad_logfs/logfs.h"
+#endif
+
 /*@
     MPI_File_set_view - Sets the file view
 
@@ -47,6 +51,10 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
     static char myname[] = "MPI_FILE_SET_VIEW";
     ADIO_Offset shared_fp, byte_off;
     ADIO_File adio_fh;
+
+#ifdef ROMIO_LOGFS
+    int logfs_enabled = 0;
+#endif
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -126,6 +134,20 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 	goto fn_exit;
     }
 
+#ifdef ROMIO_LOGFS
+    if (!strcmp(datarep, "logfs") || !strcmp(datarep, "LOGFS"))
+    {
+       logfs_enabled = 1; 
+       datarep = "logfs"; 
+       /* TODO: enable logfs */
+       /* use info argument for 
+        *    - replay on close
+        *    - logfile location
+        *    - logfile limit
+        */
+    }
+#endif
+
     if ((datarep == NULL) || (strcmp(datarep, "native") &&
 	    strcmp(datarep, "NATIVE") &&
 	    strcmp(datarep, "external32") &&
@@ -133,14 +155,63 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 	    strcmp(datarep, "internal") &&
 	    strcmp(datarep, "INTERNAL")) )
     {
+#ifdef ROMIO_LOGFS
+       /* logfs is also supported as a data rep
+        * We could also just lie about the datarep and say it's native in this
+        * case, but than we cannot check later on to see if it was enabled */
+       if (!logfs_enabled)
+       {
+#endif
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__,
 					  MPI_ERR_UNSUPPORTED_DATAREP, 
 					  "**unsupporteddatarep",0);
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
+#ifdef ROMIO_LOGFS
+    }
+#endif
     }
     /* --END ERROR HANDLING-- */
+    else
+       datarep = "native"; 
+   
+    /* length test of datarep string 
+     * not needed since the previous test would fail for anything
+     * larger than "logfs" or "native" */
+    
+
+    /* --END ERROR HANDLING-- */
+
+   /* datarep will be  "logfs" or "native" */
+
+#ifdef ROMIO_LOGFS
+    /* check for switching to/from logfs */
+    if (!strcmp (fh->datarep,"native") && logfs_enabled)
+    {
+       /* switch from native to logfs */
+       logfs_activate (fh, info); 
+
+       /* pass view info */
+       logfs_set_view (fh, disp, etype, filetype); 
+    }
+    else if (!strcmp (fh->datarep,"logfs") && !logfs_enabled)
+    {
+       /* switch from logfs to native */
+       /* deactivate layering and force replay */
+       logfs_deactivate(fh); 
+    }
+    /* lastly, deal with a file view in the prefix case, where logfs requested
+     * via 'logfs:' prefix */
+    if (fh->file_system == ADIO_LOGFS) {
+	logfs_set_view(fh, disp, etype, filetype);
+    }
+#endif
+
+    /* update view */
+    if (fh->datarep)
+       ADIOI_Free (fh->datarep); /* mem from strdup */ 
+    fh->datarep = ADIOI_Strdup (datarep); 
 
     if (disp == MPI_DISPLACEMENT_CURRENT) {
 	MPI_Barrier(adio_fh->comm);

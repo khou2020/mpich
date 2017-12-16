@@ -10,113 +10,6 @@
 #include "mpl_utlist.h"
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_alloc_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_alloc_lut(MPIDI_rank_map_lut_t ** lut, int size)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_rank_map_lut_t *new_lut = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLOC_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_LUT);
-
-    new_lut = (MPIDI_rank_map_lut_t *) MPL_malloc(sizeof(MPIDI_rank_map_lut_t)
-                                                  + size * sizeof(MPIDI_lpid_t));
-    if (new_lut == NULL) {
-        *lut = NULL;
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-
-    MPIR_Object_set_ref(new_lut, 1);
-    *lut = new_lut;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc lut %p, size %ld, refcount=%d",
-                     new_lut, size * sizeof(MPIDI_lpid_t), MPIR_Object_get_ref(new_lut)));
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_LUT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_release_lut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIU_release_lut(MPIDI_rank_map_lut_t * lut)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int count = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_LUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_LUT);
-
-    MPIR_Object_release_ref(lut, &count);
-    if (count == 0) {
-        MPL_free(lut);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free lut %p", lut));
-    }
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_LUT);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_alloc_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDI_alloc_mlut(MPIDI_rank_map_mlut_t ** mlut, int size)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_rank_map_mlut_t *new_mlut = NULL;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_ALLOC_MLUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_ALLOC_MLUT);
-
-    new_mlut = (MPIDI_rank_map_mlut_t *) MPL_malloc(sizeof(MPIDI_rank_map_mlut_t)
-                                                    + size * sizeof(MPIDI_gpid_t));
-    if (new_mlut == NULL) {
-        *mlut = NULL;
-        MPIR_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-
-    MPIR_Object_set_ref(new_mlut, 1);
-    *mlut = new_mlut;
-
-    MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
-                    (MPL_DBG_FDEST, "alloc mlut %p, size %ld, refcount=%d",
-                     new_mlut, size * sizeof(MPIDI_gpid_t), MPIR_Object_get_ref(new_mlut)));
-  fn_exit:
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDI_ALLOC_MLUT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDIU_release_mlut
-#undef FCNAME
-#define FCNAME MPL_QUOTE(FUNCNAME)
-static inline int MPIDIU_release_mlut(MPIDI_rank_map_mlut_t * mlut)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int count = 0;
-
-    MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDIU_RELEASE_MLUT);
-    MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDIU_RELEASE_MLUT);
-
-    MPIR_Object_release_ref(mlut, &count);
-    if (count == 0) {
-        MPL_free(mlut);
-        MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE, (MPL_DBG_FDEST, "free mlut %p", mlut));
-    }
-
-    MPIR_FUNC_VERBOSE_EXIT(MPID_STATE_MPIDIU_RELEASE_MLUT);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_map_size
 #undef FCNAME
 #define FCNAME MPL_QUOTE(FUNCNAME)
@@ -214,7 +107,7 @@ static inline int MPIDI_src_comm_to_lut(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_COMM_TO_LUT);
 
     if (!mapper_offset) {
-        mpi_errno = MPIDI_alloc_lut(&lut, total_mapper_size);
+        mpi_errno = MPIDIU_alloc_lut(&lut, total_mapper_size);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         dest->size = total_mapper_size;
@@ -302,7 +195,7 @@ static inline int MPIDI_src_comm_to_mlut(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_COMM_TO_MLUT);
 
     if (!mapper_offset) {
-        mpi_errno = MPIDI_alloc_mlut(&mlut, total_mapper_size);
+        mpi_errno = MPIDIU_alloc_mlut(&mlut, total_mapper_size);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         dest->size = total_mapper_size;
@@ -406,7 +299,7 @@ static inline int MPIDI_src_mlut_to_mlut(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_MLUT_TO_MLUT);
 
     if (!mapper_offset) {
-        mpi_errno = MPIDI_alloc_mlut(&mlut, total_mapper_size);
+        mpi_errno = MPIDIU_alloc_mlut(&mlut, total_mapper_size);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         dest->size = total_mapper_size;
@@ -449,7 +342,7 @@ static inline int MPIDI_src_map_to_lut(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_SRC_MAP_TO_LUT);
 
     if (!mapper_offset) {
-        mpi_errno = MPIDI_alloc_lut(&lut, total_mapper_size);
+        mpi_errno = MPIDIU_alloc_lut(&lut, total_mapper_size);
         if (mpi_errno)
             MPIR_ERR_POP(mpi_errno);
         dest->size = total_mapper_size;
@@ -533,7 +426,11 @@ static inline void MPIDI_direct_of_src_rmap(MPIDI_rank_map_t * src,
     MPIR_FUNC_VERBOSE_STATE_DECL(MPID_STATE_MPIDI_DIRECT_OF_SRC_RMAP);
     MPIR_FUNC_VERBOSE_ENTER(MPID_STATE_MPIDI_DIRECT_OF_SRC_RMAP);
     dest->mode = src->mode;
-    dest->size = MPIDI_map_size(*mapper);
+    if (mapper) {
+        dest->size = MPIDI_map_size(*mapper);
+    } else {
+        dest->size = src->size;
+    }
     dest->avtid = src->avtid;
     MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                     (MPL_DBG_FDEST, " source mode %d", (int) src->mode));
@@ -791,7 +688,7 @@ static inline int MPIDI_check_convert_mlut_to_lut(MPIDI_rank_map_t * src)
         src->mode = MPIDI_RANK_MAP_LUT;
     }
     mlut = src->irreg.mlut.t;
-    mpi_errno = MPIDI_alloc_lut(&src->irreg.lut.t, src->size);
+    mpi_errno = MPIDIU_alloc_lut(&src->irreg.lut.t, src->size);
     if (mpi_errno)
         MPIR_ERR_POP(mpi_errno);
     src->irreg.lut.lpid = src->irreg.lut.t->lpid;
@@ -1138,7 +1035,7 @@ MPL_STATIC_INLINE_PREFIX int MPIDI_comm_create_rank_map(MPIR_Comm * comm)
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MAP, VERBOSE,
                             (MPL_DBG_FDEST, "\t create local_comm using src_comm"));
             MPIDI_direct_of_src_rmap(&MPIDI_COMM(comm, local_map),
-                                     &MPIDI_COMM(comm->local_comm, map), mapper);
+                                     &MPIDI_COMM(comm->local_comm, map), NULL);
 
             MPL_DBG_MSG_FMT(MPIDI_CH4_DBG_MEMORY, VERBOSE,
                             (MPL_DBG_FDEST, "create local_comm using src_comm"));

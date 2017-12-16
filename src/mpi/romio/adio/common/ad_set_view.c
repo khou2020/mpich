@@ -60,11 +60,18 @@ void ADIO_Set_view(ADIO_File fd, ADIO_Offset disp, MPI_Datatype etype,
         ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 	if (filetype_is_contig) fd->fp_ind = disp;
 	else {
-	    flat_file = ADIOI_Flatten_and_find(fd->filetype);
-	    for (i=0; i<flat_file->count; i++) {
-		if (flat_file->blocklens[i]) {
-		    fd->fp_ind = disp + flat_file->indices[i];
-		    break;
+	    if (fd->file_system == ADIO_LOGFS) {
+		fd->fp_ind = disp;
+	    /* skip the type processing for logfs.  A logfs write will already take
+	     * into account the lower bound markers */
+		;
+	    } else {
+		flat_file = ADIOI_Flatten_and_find(fd->filetype);
+		for (i=0; i<flat_file->count; i++) {
+		    if (flat_file->blocklens[i]) {
+			fd->fp_ind = disp + flat_file->indices[i];
+			break;
+		    }
 		}
 	    }
 	}

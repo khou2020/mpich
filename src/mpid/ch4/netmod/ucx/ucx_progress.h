@@ -15,11 +15,11 @@
 static inline int MPIDI_UCX_am_handler(void *msg, size_t msg_sz)
 {
     int mpi_errno;
-    MPIR_Request *rreq;
+    MPIR_Request *rreq = NULL;
     void *p_data;
     void *in_data;
     size_t data_sz, in_data_sz;
-    MPIDIG_am_target_cmpl_cb target_cmpl_cb;
+    MPIDIG_am_target_cmpl_cb target_cmpl_cb = NULL;
     struct iovec *iov;
     int i, is_contig, iov_len;
     size_t done, curr_len, rem;
@@ -130,13 +130,11 @@ static inline int MPIDI_NM_progress(void *netmod_context, int blocking)
         MPL_free(am_buf);
         message_handle =
             ucp_tag_probe_nb(MPIDI_UCX_global.worker, MPIDI_UCX_AM_TAG,
-                             ~MPIDI_UCX_AM_TAG, 1, &info);
+                             MPIDI_UCX_AM_TAG, 1, &info);
 
     }
 
     ucp_worker_progress(MPIDI_UCX_global.worker);
-
-    MPID_THREAD_CS_EXIT(POBJ, MPIDI_THREAD_WORKER_MUTEX);
 
   fn_exit:
     return mpi_errno;

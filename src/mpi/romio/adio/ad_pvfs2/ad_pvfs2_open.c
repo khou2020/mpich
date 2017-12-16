@@ -111,7 +111,7 @@ static void fake_an_open(PVFS_fs_id fs_id, char *pvfs_name, int access_mode,
 	    }
 	    o_status->object_ref = resp_create.ref;
 	} else {
-	    FPRINTF(stderr, "cannot create file without MPI_MODE_CREATE\n");
+	    /*FPRINTF(stderr, "cannot create file without MPI_MODE_CREATE\n");*/
 	    o_status->error = ret;
 	    return;
 	}

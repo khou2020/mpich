@@ -118,9 +118,75 @@ static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep);
 #endif
 #endif 
 static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
+	                            ADIOI_Fns **ops,
 				    int *error_code);
 static void ADIO_FileSysType_fncall(const char *filename, int *fstype,
 				    int *error_code);
+struct ADIO_FSTypes 
+{
+   ADIOI_Fns * fileops;   	/* function table */
+   int    fstype;               /* ADIO_xxx constant */
+   const char * prefix;         /* file prefix */
+};  
+
+/* 
+ * To add an ADIO
+ *    - add to the table below
+ *    - add a constant for your ADIO in include/adio.h
+ *    - add a guarded include in include/adioi_fs_proto.h
+ */
+static struct ADIO_FSTypes fstypes[] = { 
+#ifdef ROMIO_UFS
+   { &ADIO_UFS_operations, ADIO_UFS, "ufs:"},
+#endif
+#ifdef ROMIO_NFS
+   { &ADIO_NFS_operations, ADIO_NFS, "nfs:"},
+#endif
+#ifdef ROMIO_XFS
+   { &ADIO_XFS_operations, ADIO_XFS, "xfs:"}, 
+#endif
+#ifdef ROMIO_PVFS2
+   { &ADIO_PVFS2_operations, ADIO_PVFS2, "pvfs2:"}, 
+#endif
+#ifdef ROMIO_TESTFS
+   { &ADIO_TESTFS_operations, ADIO_TESTFS, "testfs:"}, 
+#endif
+#ifdef ROMIO_LOGFS
+   { &ADIO_LOGFS_operations, ADIO_LOGFS, "logfs:"}, 
+#endif
+#ifdef ROMIO_GPFS
+   { &ADIO_GPFS_operations, ADIO_GPFS, "gpfs:"},
+#endif
+#ifdef ROMIO_LUSTRE
+   { &ADIO_LUSTRE_operations, ADIO_LUSTRE, "lustre:"},
+#endif
+
+#if 0 
+   /* cannot force icache / trace since there is no way to specify 
+    * the underlying filesystem */
+#ifdef ROMIO_TRACE
+   { &ADIO_TRACE_operations, ADIO_TRACE, "trace:", "trace"}, 
+#endif
+#ifdef ROMIO_ICACHE
+   { &ADIO_ICACHE_operations, ADIO_ICACHE, "icache:", "icache"}, 
+#endif
+#endif
+   { 0, 0, 0} /* guard entry */
+}; 
+
+/* return a pointer to the filesystem prefix
+ * Return 0 if not found */
+const char * ADIO_FileTypeToPrefix (int filetype)
+{
+   int i=0;
+   while (fstypes[i].fileops)
+   {
+      if (fstypes[i].fstype == filetype)
+         return fstypes[i].prefix;
+      ++i;
+   }
+   return 0;
+}
 
 /*
  ADIO_FileSysType_parentdir - determines a string pathname for the
@@ -518,48 +584,44 @@ Output Parameters:
   is considered an error. Except for on Windows systems where the default is NTFS.
 
  */
-static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *error_code)
+static void ADIO_FileSysType_prefix(const char *filename, int *fstype,
+	ADIOI_Fns **ops, int *error_code)
 {
-    static char myname[] = "ADIO_RESOLVEFILETYPE_PREFIX";
+    char * cpy = 0;
+    int i;
     *error_code = MPI_SUCCESS;
+    *fstype = -1;
+    char myname[] = "ADIO_FileSysType_prefix";
 
-    if (!strncmp(filename, "ufs:", 4) || !strncmp(filename, "UFS:", 4)) {
-	*fstype = ADIO_UFS;
-    }
-    else if (!strncmp(filename, "nfs:", 4) || !strncmp(filename, "NFS:", 4)) {
-	*fstype = ADIO_NFS;
-    }
-    else if (!strncmp(filename, "panfs:", 6) || !strncmp(filename, "PANFS:", 6)) {
-	*fstype = ADIO_PANFS;
-    }
-    else if (!strncmp(filename, "xfs:", 4) || !strncmp(filename, "XFS:", 4)) {
-	*fstype = ADIO_XFS;
-    }
-    else if (!strncmp(filename, "pvfs2:", 6)||!strncmp(filename, "PVFS2:", 6)) {
-	*fstype = ADIO_PVFS2;
-    } 
-    else if (!strncmp(filename, "testfs:", 7) 
-	     || !strncmp(filename, "TESTFS:", 7))
+    /* search table for prefix */
+    cpy = ADIOI_Strdup (filename);
+    ADIOI_Strlower (cpy);
+
+    i=0;
+    while (fstypes[i].fileops)
     {
-	*fstype = ADIO_TESTFS;
+	if (!strncmp (fstypes[i].prefix, cpy, strlen(fstypes[i].prefix)))
+	{
+	    *fstype = fstypes[i].fstype;
+	    *ops = fstypes[i].fileops;
+	    break;
+	}
+	++i;
     }
-    else if (!strncmp(filename, "lustre:", 7) 
-	     || !strncmp(filename, "LUSTRE:", 7))
+
+    if (-1 == *fstype)
     {
-	*fstype = ADIO_LUSTRE;
-    }
-    else if (!strncmp(filename, "gpfs:", 5) || !strncmp(filename, "GPFS:", 5)) {
-	*fstype = ADIO_GPFS;
-    }
-    else {
 	*fstype = 0;
-        /* --BEGIN ERROR HANDLING-- */
-        *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-				           myname, __LINE__, MPI_ERR_NO_SUCH_FILE,
-				           "**filename", "**filename %s", filename);
-        /* --END ERROR HANDLING-- */
+	/* --BEGIN ERROR HANDLING-- */
+	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+		myname, __LINE__, MPI_ERR_NO_SUCH_FILE,
+		"**filename", "**filename %s", filename);
+	/* --END ERROR HANDLING-- */
+	*error_code = MPI_ERR_UNKNOWN;
     }
+    ADIOI_Free (cpy);
 }
+
 
 /*@
     ADIO_ResolveFileType - determines file system type and operations from
@@ -588,10 +650,11 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     static char myname[] = "ADIO_RESOLVEFILETYPE";
     char * p;
 
+    *ops = 0;
     file_system = -1;
     if (filename == NULL) {
-	    *error_code = ADIOI_Err_create_code(myname, filename, ENOENT);
-	    return;
+	*error_code = ADIOI_Err_create_code(myname, filename, ENOENT);
+	return;
     }
     tmp = strchr(filename, ':');
     if (!tmp) {
@@ -655,7 +718,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	 *
 	 * perhaps we should have this code go through the allreduce as well?
 	 */
-	ADIO_FileSysType_prefix(filename, &file_system, &myerrcode);
+	ADIO_FileSysType_prefix(filename, &file_system, ops, &myerrcode);
 	if (myerrcode != MPI_SUCCESS) {
 	    *error_code = myerrcode;
 	    return;
@@ -671,94 +734,35 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
      * including the colon! */
     p = getenv("ROMIO_FSTYPE_FORCE");
     if (p != NULL) {
-	ADIO_FileSysType_prefix(p, &file_system, &myerrcode);
+	ADIO_FileSysType_prefix(p, &file_system, ops, &myerrcode);
 	if (myerrcode != MPI_SUCCESS) {
 	    *error_code = myerrcode;
 	    return;
 	}
     }
-
-    /* verify that we support this file system type and set ops pointer */
-    if (file_system == ADIO_UFS) {
-#ifndef ROMIO_UFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_UFS_operations;
-#endif
+    /* verify that we support this file system: look for filesystem in the
+     * fstypes tables */
+    if (! (*ops))
+    {
+	int i=0;
+	while (fstypes[i].fileops)
+	{
+	    if (file_system == fstypes[i].fstype)
+	    {
+		*ops = fstypes[i].fileops;
+		break;
+	    }
+	    ++i;
+	}
     }
-    if (file_system == ADIO_NFS) {
-#ifndef ROMIO_NFS
+    if (! (*ops))
+    {
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
+		myname, __LINE__, MPI_ERR_IO,
+		"**iofstypeunsupported", 0);
 	return;
-#else
-	*ops = &ADIO_NFS_operations;
-#endif
-    }
-    if (file_system == ADIO_PANFS) {
-#ifndef ROMIO_PANFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_PANFS_operations;
-#endif
-    }
-    if (file_system == ADIO_XFS) {
-#ifndef ROMIO_XFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_XFS_operations;
-#endif
-    }
-    if (file_system == ADIO_PVFS2) {
-#ifndef ROMIO_PVFS2
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_PVFS2_operations;
-#endif
-    }
-    if (file_system == ADIO_TESTFS) {
-#ifndef ROMIO_TESTFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					   myname, __LINE__, MPI_ERR_IO,
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_TESTFS_operations;
-#endif
     }
 
-    if (file_system == ADIO_GPFS) {
-#ifndef ROMIO_GPFS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					myname, __LINE__, MPI_ERR_IO,
-					"**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_GPFS_operations;
-#endif
-    }
-
-    if (file_system == ADIO_LUSTRE) {
-#ifndef ROMIO_LUSTRE 
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_LUSTRE_operations;
-#endif
-    }
     *error_code = MPI_SUCCESS;
     *fstype = file_system;
     return;

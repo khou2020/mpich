@@ -27,6 +27,7 @@ int     romio_onesided_no_rmw;
 int     romio_onesided_always_rmw;
 int     romio_onesided_inform_rmw;
 int 	romio_tunegather;
+int     romio_agg_map_policy;
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration
@@ -108,4 +109,18 @@ void ad_get_env_vars() {
     romio_tunegather = 1;
 	x = getenv( "ROMIO_TUNEGATHER"   );
 	if (x) romio_tunegather   = atoi(x);
+/*
+ * - AGG_MAP_POLICY - Define aggregator layout among nodes
+ *   Possible values:
+ *   - 0 - Original layout (blocked layout in each node)
+ *   - 1 - Round-robin layout if # procs per node exceeds 1
+ *   - Default is 0
+ */
+
+    romio_agg_map_policy = 0;
+    x = getenv("AGG_MAP_POLICY");
+    if (x) romio_agg_map_policy = atoi(x);
+#ifdef CB_CONFIG_LIST_DEBUG
+    FPRINTF(stderr, "romio_agg_map_policy=%d\n", romio_agg_map_policy);
+#endif
 }

@@ -62,6 +62,8 @@
 #define ROMIOCONF_H_INCLUDED
 #endif
 
+/* probleem is oude makefile */ 
+
 #include "mpi.h"
 #include "mpio.h"
 #ifdef HAVE_FCNTL_H
@@ -235,6 +237,7 @@ typedef struct ADIOI_FileD {
     MPI_Win io_buf_put_amounts_window; /* Window over the io_buf_put_amounts */
     /* External32 */
     int is_external32;      /* bool:  0 means native view */
+    char * datarep;          /* active data representation for this file */
 
 } ADIOI_FileD;
 
@@ -286,6 +289,7 @@ typedef struct {
 #define ADIO_PANFS               161   /* Panasas FS */
 #define ADIO_LUSTRE              163   /* Lustre */
 #define ADIO_GPFS                  168
+#define ADIO_LOGFS               169   /* fake filesystem; layers on other */
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR
@@ -294,6 +298,7 @@ typedef struct {
 #define ADIO_FCNTL_SET_ATOMICITY 180
 #define ADIO_FCNTL_SET_DISKSPACE 188
 #define ADIO_FCNTL_GET_FSIZE     200
+#define ADIO_FCNTL_SET_SLAVE     202
 
 /* file system feature tests */
 #define ADIO_LOCKS               300 /* file system supports fcntl()-style locking */
@@ -402,6 +407,7 @@ void ADIO_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 void ADIO_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
           ADIOI_Fns **ops, int *error_code);
+const char * ADIO_FileTypeToPrefix (int filetype);
 void ADIO_Get_shared_fp(ADIO_File fd, ADIO_Offset size, ADIO_Offset *shared_fp,
 			 int *error_code);
 void ADIO_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
