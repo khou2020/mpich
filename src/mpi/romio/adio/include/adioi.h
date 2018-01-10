@@ -109,7 +109,11 @@ enum {
    globally accessible linked list. Once attribute caching on a
    datatype is available (in MPI-2), that should be used instead. */  
 
-typedef struct ADIOI_Fl_node {  
+#define ADIOI_TYPE_DECREASE 0x00000001  /* if not monotonic nondecreasing */
+#define ADIOI_TYPE_OVERLAP  0x00000002  /* if contains overlapping regions */
+#define ADIOI_TYPE_NEGATIVE 0x00000004  /* if one of displacements is negative */
+
+typedef struct ADIOI_Fl_node {
     MPI_Datatype type;
     MPI_Count count;                   /* no. of contiguous blocks */
     ADIO_Offset *blocklens;      /* array of contiguous block lengths (bytes)*/
@@ -124,20 +128,21 @@ typedef struct ADIOI_Fl_node {
      * (-1 indicates "not explicitly set") */
     ADIO_Offset lb_idx;
     ADIO_Offset ub_idx;
-    int refct;                   /* when storing flattened representation on a
-				    type, attribute copy and delete routines
-				    will manage refct */
+    int refct;                  /* when storing flattened representation on a
+                                 * type, attribute copy and delete routines
+                                 * will manage refct */
+    int flag;                   /* ADIOI_TYPE_XXX */
 } ADIOI_Flatlist_node;
 
 #ifdef ROMIO_PVFS2
 #include <pvfs2.h>
 #endif
 typedef struct ADIOI_AIO_req_str {
-	/* very wierd: if this MPI_Request is a pointer, some C++ compilers
-	 * will clobber it when the MPICH C++ bindings are used */
-	MPI_Request req;
-	MPI_Offset nbytes;
-	/* should probably make this a union */
+    /* very weird: if this MPI_Request is a pointer, some C++ compilers
+     * will clobber it when the MPICH C++ bindings are used */
+    MPI_Request req;
+    MPI_Offset nbytes;
+    /* should probably make this a union */
 #ifdef ROMIO_HAVE_WORKING_AIO
 	struct aiocb *aiocbp;
 #endif
@@ -692,26 +697,26 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 				     ADIO_Offset *fd_start,
 				     ADIO_Offset *fd_end);
 
-/* This data structure holds parameters releated to file   */
+/* This data structure holds parameters related to file   */
 /* striping needed by the one-sided aggregation algorithm. */
 /* A stripeSize of 0 indicates there is no striping.       */
-typedef struct ADIOI_OneSidedStripeParms {    
-    int stripeSize; /* size in bytes of the striping unit - a size of 0 indicates to the */
-                    /* onesided algorithm that we are a non-striping file system         */
-    ADIO_Offset segmentLen; /* size in bytes of the segment (stripeSize*number of aggs) */
-                            /* up to the size of the file)                              */
-    int stripesPerAgg; /* the number of stripes to be packed into an agg cb for this segment */
-    int segmentIter; /* segment number for the group of stripes currently being packed into  */
-                     /* the agg cb - resets to 0 for each cb flush to the file system        */
-    int flushCB; /* once we have fully packed the cb on an agg this flags */
-                 /* tells us to now write to the file                     */
-    ADIO_Offset stripedLastFileOffset; /* since we are now just calling the onesided algorithm */
-                                       /* with the offset range of segment, we still need to   */
-                                       /* know the actual last offset of the file.             */
-    int firstStripedWriteCall; /* whether this is the first call in the first segement of the  */
-                               /* onesided algorithm.                                          */
-    int lastStripedWriteCall; /* whether this is the last call in the last segement of the  */
-                              /* onesided algorithm.                                        */
+typedef struct ADIOI_OneSidedStripeParms {
+    int stripeSize;             /* size in bytes of the striping unit - a size of 0 indicates to the */
+    /* onesided algorithm that we are a non-striping file system         */
+    ADIO_Offset segmentLen;     /* size in bytes of the segment (stripeSize*number of aggs) */
+    /* up to the size of the file)                              */
+    int stripesPerAgg;          /* the number of stripes to be packed into an agg cb for this segment */
+    int segmentIter;            /* segment number for the group of stripes currently being packed into  */
+    /* the agg cb - resets to 0 for each cb flush to the file system        */
+    int flushCB;                /* once we have fully packed the cb on an agg this flags */
+    /* tells us to now write to the file                     */
+    ADIO_Offset stripedLastFileOffset;  /* since we are now just calling the onesided algorithm */
+    /* with the offset range of segment, we still need to   */
+    /* know the actual last offset of the file.             */
+    int firstStripedWriteCall;  /* whether this is the first call in the first segment of the  */
+    /* onesided algorithm.                                          */
+    int lastStripedWriteCall;   /* whether this is the last call in the last segment of the  */
+    /* onesided algorithm.                                        */
 } ADIOI_OneSidedStripeParms;
 
 int ADIOI_OneSidedCleanup(ADIO_File fd);

@@ -23,6 +23,7 @@ static ADIOI_Flatlist_node* flatlist_node_new(MPI_Datatype datatype,
     flat->lb_idx = flat->ub_idx = -1;
     flat->refct = 1;
     flat->count = count;
+    flat->flag = 0;
 
     flat->blocklens = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
     flat->indices = (ADIO_Offset *) ADIOI_Malloc(flat->count * sizeof(ADIO_Offset));
@@ -729,12 +730,78 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 		num = *curr_index - prev_index;
 
 /* The current type has to be replicated blocklens[n] times */
-		MPI_Type_extent(types[n], &old_extent);
-		for (m=1; m<ints[1+n]; m++) {
-		    for (i=0; i<num; i++) {
-			flat->indices[j] =
-			    flat->indices[j-num] + ADIOI_AINT_CAST_TO_OFFSET old_extent;
-			flat->blocklens[j] = flat->blocklens[j-num];
+                    MPI_Type_extent(types[n], &old_extent);
+                    for (m = 1; m < ints[1 + n]; m++) {
+                        for (i = 0; i < num; i++) {
+                            flat->indices[j] =
+                                flat->indices[j - num] + ADIOI_AINT_CAST_TO_OFFSET old_extent;
+                            flat->blocklens[j] = flat->blocklens[j - num];
+#ifdef FLATTEN_DEBUG
+                            DBG_FPRINTF(stderr,
+                                        "ADIOI_Flatten:: simple old_extent " MPI_AINT_FMT_HEX_SPEC
+                                        ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",
+                                        old_extent, j, flat->indices[j], j, flat->blocklens[j]);
+#endif
+                            j++;
+                        }
+                    }
+                    *curr_index = j;
+                }
+            }
+            break;
+
+        case MPI_COMBINER_RESIZED:
+#ifdef FLATTEN_DEBUG
+            DBG_FPRINTF(stderr, "ADIOI_Flatten:: MPI_COMBINER_RESIZED\n");
+#endif
+
+            /* This is done similar to a type_struct with an lb, datatype, ub */
+
+            /* handle the Lb */
+            j = *curr_index;
+            /* when we process resized types, we (recursively) process the lower
+             * bound, the type being resized, then the upper bound.  In the
+             * resized-of-resized case, we might find ourselves updating the upper
+             * bound based on the inner type, but the lower bound based on the
+             * upper type.  check both lb and ub to prevent mixing updates */
+            if (flat->lb_idx == -1 && flat->ub_idx == -1) {
+                flat->indices[j] = st_offset + adds[0];
+                /* this zero-length blocklens[] element, unlike elsewhere in the
+                 * flattening code, is correct and is used to indicate a lower bound
+                 * marker */
+                flat->blocklens[j] = 0;
+                flat->lb_idx = *curr_index;
+                lb_updated = 1;
+
+#ifdef FLATTEN_DEBUG
+                DBG_FPRINTF(stderr,
+                            "ADIOI_Flatten:: simple adds[%#X] " MPI_AINT_FMT_HEX_SPEC
+                            ", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n", 0,
+                            adds[0], j, flat->indices[j], j, flat->blocklens[j]);
+#endif
+
+                (*curr_index)++;
+            } else {
+                /* skipped over this chunk because something else higher-up in the
+                 * type construction set this for us already */
+                flat->count--;
+                st_offset -= adds[0];
+            }
+
+            /* handle the datatype */
+
+            MPI_Type_get_envelope(types[0], &old_nints, &old_nadds, &old_ntypes, &old_combiner);
+            ADIOI_Datatype_iscontig(types[0], &old_is_contig);
+
+            if ((old_combiner != MPI_COMBINER_NAMED) && (!old_is_contig)) {
+                ADIOI_Flatten(types[0], flat, st_offset + adds[0], curr_index);
+            } else {
+                /* current type is basic or contiguous */
+                j = *curr_index;
+                flat->indices[j] = st_offset;
+                MPI_Type_size_x(types[0], &old_size);
+                flat->blocklens[j] = old_size;
+
 #ifdef FLATTEN_DEBUG
 			DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple old_extent "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",old_extent,j, flat->indices[j], j, flat->blocklens[j]);
 #endif
@@ -1152,12 +1219,33 @@ void ADIOI_Optimize_flattened(ADIOI_Flatlist_node *flat_type)
     ADIO_Offset *opt_indices;
 
     opt_blocks = 1;
-    
-    /* save number of noncontiguous blocks in opt_blocks */
-    for (i=0; i < (flat_type->count - 1); i++) {
-        if ((flat_type->indices[i] + flat_type->blocklens[i] !=
-	     flat_type->indices[i + 1]))
-	    opt_blocks++;
+
+    for (j = -1, i = 0; i < flat_type->count; i++) {
+        /* save number of noncontiguous blocks in opt_blocks */
+        if (i < flat_type->count - 1 &&
+            (flat_type->indices[i] + flat_type->blocklens[i] != flat_type->indices[i + 1]))
+            opt_blocks++;
+
+        /* Check if any of the displacements is negative */
+        if (flat_type->blocklens[i] > 0 && flat_type->indices[i] < 0)
+            flat_type->flag |= ADIOI_TYPE_NEGATIVE;
+
+        if (flat_type->blocklens[i] == 0)       /* skip zero-length block */
+            continue;
+        else if (j == -1) {
+            j = i;      /* set j the first non-zero-length block index */
+            continue;
+        }
+
+        /* Check if displacements are in a monotonic nondecreasing order */
+        if (flat_type->indices[j] > flat_type->indices[i])
+            flat_type->flag |= ADIOI_TYPE_DECREASE;
+
+        /* Check for overlapping regions */
+        if (flat_type->indices[j] + flat_type->blocklens[j] > flat_type->indices[i])
+            flat_type->flag |= ADIOI_TYPE_OVERLAP;
+
+        j = i;  /* j is the previous non-zero-length block index */
     }
 
     /* if we can't reduce the number of blocks, quit now */
