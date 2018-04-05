@@ -131,8 +131,10 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 		NULL, myname, error_code);
     }
 
+	/*
     if (ADIOI_Direct_read) fd->direct_read = 1;
     if (ADIOI_Direct_write) fd->direct_write = 1;
+	*/
 
     ADIOI_Free(value);
 

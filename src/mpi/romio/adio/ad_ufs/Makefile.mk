@@ -7,7 +7,8 @@
 
 if BUILD_AD_UFS
 
-noinst_HEADERS += adio/ad_ufs/ad_ufs.h
+noinst_HEADERS += adio/ad_ufs/ad_ufs.h \
+                  adio/ad_lustre/ad_lustre.h
 
 romio_other_sources +=        \
     adio/ad_ufs/ad_ufs.c      \

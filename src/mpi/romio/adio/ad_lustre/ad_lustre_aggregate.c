@@ -25,70 +25,9 @@ void ADIOI_LUSTRE_Get_striping_info(ADIO_File fd, int **striping_info_ptr,
     int stripe_size, stripe_count, CO = 1;
     int avail_cb_nodes, divisor, nprocs_for_coll = fd->hints->cb_nodes;
 
-    /* Get hints value */
-    /* stripe size */
-    stripe_size = fd->hints->striping_unit;
-    /* stripe count */
-    /* stripe_size and stripe_count have been validated in ADIOI_LUSTRE_Open() */
-    stripe_count = fd->hints->striping_factor;
-
-    /* Calculate the available number of I/O clients */
-    if (!mode) {
-        /* for collective read,
-	 * if "CO" clients access the same OST simultaneously,
-	 * the OST disk seek time would be much. So, to avoid this,
-	 * it might be better if 1 client only accesses 1 OST.
-	 * So, we set CO = 1 to meet the above requirement.
-	 */
-	CO = 1;
-	/*XXX: maybe there are other better way for collective read */
-    } else {
-        /* CO also has been validated in ADIOI_LUSTRE_Open(), >0 */
-	CO = fd->hints->fs_hints.lustre.co_ratio;
-    }
-    /* Calculate how many IO clients we need */
-    /* Algorithm courtesy Pascal Deveze (pascal.deveze@bull.net) */
-    /* To avoid extent lock conflicts,
-     * avail_cb_nodes should either 
-     * 	- be a multiple of stripe_count,
-     *  - or divide stripe_count exactly
-     * so that each OST is accessed by a maximum of CO constant clients. */
-    if (nprocs_for_coll >= stripe_count)
-	/* avail_cb_nodes should be a multiple of stripe_count and the number
-	 * of procs per OST should be limited to the minimum between
-	 * nprocs_for_coll/stripe_count and CO 
-	 * 
-	 * e.g. if stripe_count=20, nprocs_for_coll=42 and CO=3 then 
-	 * avail_cb_nodes should be equal to 40 */
-        avail_cb_nodes = 
-		stripe_count * MPL_MIN(nprocs_for_coll/stripe_count, CO);
-    else {
-        /* nprocs_for_coll is less than stripe_count */
-        /* avail_cb_nodes should divide stripe_count */
-        /* e.g. if stripe_count=60 and nprocs_for_coll=8 then 
-	 * avail_cb_nodes should be egal to 6 */
-        /* This could be done with :
-                while (stripe_count % avail_cb_nodes != 0) avail_cb_nodes--;
-	   but this can be optimized for large values of nprocs_for_coll and
-	   stripe_count */
-        divisor = 2;
-        avail_cb_nodes = 1;
-        /* try to divise */
-        while (stripe_count >= divisor*divisor) {
-            if ((stripe_count % divisor) == 0) {
-                 if (stripe_count/divisor <= nprocs_for_coll) {
-                     /* The value is found ! */
-                     avail_cb_nodes = stripe_count/divisor;
-                     break;
-		}
-		/* if divisor is less than nprocs_for_coll, divisor is a
-		 * solution, but it is not sure that it is the best one */
-                else if (divisor <= nprocs_for_coll) 
-			avail_cb_nodes = divisor;
-	    }
-	    divisor++;
-        }
-    }
+    stripe_size = 1048576;  
+	stripe_count = 1; 
+	avail_cb_nodes = 1; 
 
     *striping_info_ptr = (int *) ADIOI_Malloc(3 * sizeof(int));
     striping_info = *striping_info_ptr;

@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-if BUILD_AD_LUSTRE
+#if BUILD_AD_LUSTRE
 
 noinst_HEADERS += adio/ad_lustre/ad_lustre.h
 
@@ -18,5 +18,5 @@ romio_other_sources +=                   \
     adio/ad_lustre/ad_lustre_hints.c     \
     adio/ad_lustre/ad_lustre_aggregate.c
 
-endif BUILD_AD_LUSTRE
+#endif BUILD_AD_LUSTRE
 
