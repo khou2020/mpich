@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                       MPI_Status *status) __attribute__((weak,alias("PMPI_File_write_all")));
+                       MPI_Status *status) __attribute__((weak, alias("PMPI_File_write_all")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -53,9 +53,9 @@ int MPI_File_write_all(MPI_File fh, ROMIO_CONST void *buf, int count,
     HPMP_IO_START(fl_xmpi, BLKMPIFILEWRITEALL, TRDTBLOCK, fh, datatype, count);
 #endif /* MPI_hpux */
 
-    error_code = MPIOI_File_write_all(fh, (MPI_Offset) 0,
-				      ADIO_INDIVIDUAL, buf,
-				      count, datatype, myname, status);
+    error_code = MPIOI_File_write_all(fh, (MPI_Offset)0,
+                                      ADIO_INDIVIDUAL, buf,
+                                      count, datatype, myname, status);
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, fh, datatype, count);
@@ -67,19 +67,19 @@ int MPI_File_write_all(MPI_File fh, ROMIO_CONST void *buf, int count,
 /* prevent multiple definitions of this routine */
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_write_all(MPI_File fh,
-			 MPI_Offset offset,
-			 int file_ptr_type,
-			 const void *buf,
-			 int count,
-			 MPI_Datatype datatype,
-			 char *myname,
-			 MPI_Status *status)
+                         MPI_Offset offset,
+                         int file_ptr_type,
+                         const void *buf,
+                         int count,
+                         MPI_Datatype datatype,
+                         char *myname,
+                         MPI_Status *status)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     MPI_Count datatype_size;
     ADIO_File adio_fh;
-    void *e32buf=NULL;
-    const void *xbuf=NULL;
+    void *e32buf = NULL;
+    const void *xbuf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -92,11 +92,11 @@ int MPIOI_File_write_all(MPI_File fh,
 
     if (file_ptr_type == ADIO_EXPLICIT_OFFSET && offset < 0)
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_ARG,
-					  "**iobadoffset", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_ARG,
+                                          "**iobadoffset", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
@@ -110,23 +110,25 @@ int MPIOI_File_write_all(MPI_File fh,
     /* --END ERROR HANDLING-- */
 
     xbuf = buf;
-    if (adio_fh->is_external32) {
-	error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
-	if (error_code != MPI_SUCCESS) 
-	    goto fn_exit;
+    if (adio_fh->is_external32)
+    {
+        error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
+        if (error_code != MPI_SUCCESS)
+            goto fn_exit;
 
-	xbuf = e32buf;
+        xbuf = e32buf;
     }
     ADIO_WriteStridedColl(adio_fh, xbuf, count, datatype, file_ptr_type,
                           offset, status, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
 fn_exit:
-    if (e32buf != NULL) ADIOI_Free(e32buf);
+    if (e32buf != NULL)
+        ADIOI_Free(e32buf);
     ROMIO_THREAD_CS_EXIT();
 
     return error_code;

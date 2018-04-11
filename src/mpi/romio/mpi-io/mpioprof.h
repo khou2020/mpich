@@ -54,7 +54,7 @@
 #undef MPI_File_read
 #define MPI_File_read PMPI_File_read
 #undef MPI_File_read_all
-#define MPI_File_read_all  PMPI_File_read_all 
+#define MPI_File_read_all PMPI_File_read_all
 #undef MPI_File_write
 #define MPI_File_write PMPI_File_write
 #undef MPI_File_write_all
@@ -75,7 +75,7 @@
 #undef MPI_File_iwrite_at_all
 #define MPI_File_iwrite_at_all PMPI_File_iwrite_at_all
 #undef MPI_File_iread_all
-#define MPI_File_iread_all  PMPI_File_iread_all
+#define MPI_File_iread_all PMPI_File_iread_all
 #undef MPI_File_iwrite_all
 #define MPI_File_iwrite_all PMPI_File_iwrite_all
 
@@ -172,7 +172,7 @@
 #undef MPIO_Request_c2f
 #define MPIO_Request_c2f PMPIO_Request_c2f
 
-#if defined(HAVE_MPI_INFO_SRC)  /* only in info source directory */
+#if defined(HAVE_MPI_INFO_SRC) /* only in info source directory */
 
 #undef MPI_Info_create
 #define MPI_Info_create PMPI_Info_create

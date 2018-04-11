@@ -18,7 +18,7 @@
 #pragma _CRI duplicate MPI_File_get_byte_offset as PMPI_File_get_byte_offset
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp) __attribute__((weak,alias("PMPI_File_get_byte_offset")));
+int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp) __attribute__((weak, alias("PMPI_File_get_byte_offset")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -42,7 +42,7 @@ Output Parameters:
 @*/
 int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_BYTE_OFFSET";
 
@@ -53,11 +53,11 @@ int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp)
 
     if (offset < 0)
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_ARG,
-					  "**iobadoffset", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_ARG,
+                                          "**iobadoffset", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
 
     MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);

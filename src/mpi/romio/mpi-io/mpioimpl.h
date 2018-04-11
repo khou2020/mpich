@@ -5,9 +5,8 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-
 /* header file for MPI-IO implementation. not intended to be
-   user-visible */ 
+   user-visible */
 
 #ifndef MPIOIMPL_INCLUDE
 #define MPIOIMPL_INCLUDE
@@ -23,9 +22,10 @@
 #define ROMIO_THREAD_CS_YIELD() MPIR_Ext_cs_yield()
 
 /* committed datatype checking support in ROMIO */
-#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)        \
-    do {                                               \
-        err_ =  MPIR_Ext_datatype_iscommitted(dtype_); \
+#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)       \
+    do                                                \
+    {                                                 \
+        err_ = MPIR_Ext_datatype_iscommitted(dtype_); \
     } while (0)
 
 #else /* not ROMIO_INSIDE_MPICH */
@@ -36,11 +36,15 @@
 #define ROMIO_THREAD_CS_ENTER()
 #define ROMIO_THREAD_CS_EXIT()
 #define ROMIO_THREAD_CS_YIELD()
-#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_) do {} while (0)
+#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_) \
+    do                                          \
+    {                                           \
+    } while (0)
 #endif /* ROMIO_INSIDE_MPICH */
 
 /* info is a linked list of these structures */
-struct MPIR_Info {
+struct MPIR_Info
+{
     int cookie;
     char *key, *value;
     struct MPIR_Info *next;
@@ -51,7 +55,7 @@ struct MPIR_Info {
 MPI_Delete_function ADIOI_End_call;
 
 /* common initialization routine */
-void MPIR_MPIOInit(int * error_code);
+void MPIR_MPIOInit(int *error_code);
 
 #ifdef HAVE_MPIIO_CONST
 #define ROMIO_CONST const
@@ -61,12 +65,10 @@ void MPIR_MPIOInit(int * error_code);
 
 #include "mpiu_external32.h"
 
-
 #include "mpioprof.h"
 
 #ifdef MPI_hpux
-#  include "mpioinst.h"
+#include "mpioinst.h"
 #endif /* MPI_hpux */
 
 #endif
-

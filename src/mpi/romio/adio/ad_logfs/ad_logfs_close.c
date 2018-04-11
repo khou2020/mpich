@@ -11,8 +11,6 @@
 #include "layered.h"
 #include "logfs.h"
 
-
-
 void ADIOI_LOGFS_Close(ADIO_File fd, int *error_code)
 {
     int standalone;

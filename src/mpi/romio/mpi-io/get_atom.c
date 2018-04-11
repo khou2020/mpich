@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_get_atomicity as PMPI_File_get_atomicity
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_atomicity(MPI_File fh, int *flag) __attribute__((weak,alias("PMPI_File_get_atomicity")));
+int MPI_File_get_atomicity(MPI_File fh, int *flag) __attribute__((weak, alias("PMPI_File_get_atomicity")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -41,7 +41,7 @@ int MPI_File_get_atomicity(MPI_File fh, int *flag)
     int error_code;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_ATOMICITY";
-    
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */

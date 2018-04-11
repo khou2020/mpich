@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_get_group as PMPI_File_get_group
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_group(MPI_File fh, MPI_Group *group) __attribute__((weak,alias("PMPI_File_get_group")));
+int MPI_File_get_group(MPI_File fh, MPI_Group *group) __attribute__((weak, alias("PMPI_File_get_group")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -39,7 +39,7 @@ Output Parameters:
 @*/
 int MPI_File_get_group(MPI_File fh, MPI_Group *group)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_GROUP";
 
@@ -50,7 +50,6 @@ int MPI_File_get_group(MPI_File fh, MPI_Group *group)
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
-
 
     /* note: this will return the group of processes that called open, but
      * with deferred open this might not be the group of processes that

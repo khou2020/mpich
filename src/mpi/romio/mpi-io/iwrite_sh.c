@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                           MPIO_Request *request) __attribute__((weak,alias("PMPI_File_iwrite_shared")));
+                           MPIO_Request *request) __attribute__((weak, alias("PMPI_File_iwrite_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -45,9 +45,9 @@ Output Parameters:
 #endif
 
 int MPI_File_iwrite_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
-			   MPI_Datatype datatype, MPIO_Request *request)
+                           MPI_Datatype datatype, MPIO_Request *request)
 {
-    int error_code=MPI_SUCCESS, buftype_is_contig, filetype_is_contig;
+    int error_code = MPI_SUCCESS, buftype_is_contig, filetype_is_contig;
     ADIO_File adio_fh;
     ADIO_Offset incr, bufsize;
     MPI_Count datatype_size;
@@ -78,22 +78,25 @@ int MPI_File_iwrite_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
-    incr = (count*datatype_size)/adio_fh->etype_size;
+    incr = (count * datatype_size) / adio_fh->etype_size;
     ADIO_Get_shared_fp(adio_fh, incr, &shared_fp, &error_code);
-    if (error_code != MPI_SUCCESS) {
-	/* note: ADIO_Get_shared_fp should have set up error code already? */
-	MPIO_Err_return_file(adio_fh, error_code);
+    if (error_code != MPI_SUCCESS)
+    {
+        /* note: ADIO_Get_shared_fp should have set up error code already? */
+        MPIO_Err_return_file(adio_fh, error_code);
     }
 
     /* contiguous or strided? */
-    if (buftype_is_contig && filetype_is_contig) {
-    /* convert sizes to bytes */
-	bufsize = datatype_size * count;
-	off = adio_fh->disp + adio_fh->etype_size * shared_fp;
+    if (buftype_is_contig && filetype_is_contig)
+    {
+        /* convert sizes to bytes */
+        bufsize = datatype_size * count;
+        off = adio_fh->disp + adio_fh->etype_size * shared_fp;
         if (!(adio_fh->atomicity))
-	    ADIO_IwriteContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
-		            off, request, &error_code); 
-	else {
+            ADIO_IwriteContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+                              off, request, &error_code);
+        else
+        {
             /* to maintain strict atomicity semantics with other concurrent
               operations, lock (exclusive) and call blocking routine */
 
@@ -101,17 +104,17 @@ int MPI_File_iwrite_shared(MPI_File fh, ROMIO_CONST void *buf, int count,
                 ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
 
             ADIO_WriteContig(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
-			     off, &status, &error_code);  
+                             off, &status, &error_code);
 
             if (adio_fh->file_system != ADIO_NFS)
                 ADIOI_UNLOCK(adio_fh, off, SEEK_SET, bufsize);
 
-	    MPIO_Completed_request_create(&adio_fh, bufsize, &error_code, request);
-	}
+            MPIO_Completed_request_create(&adio_fh, bufsize, &error_code, request);
+        }
     }
     else
-	ADIO_IwriteStrided(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
-			   shared_fp, request, &error_code); 
+        ADIO_IwriteStrided(adio_fh, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
+                           shared_fp, request, &error_code);
 
 fn_exit:
     ROMIO_THREAD_CS_EXIT();

@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_read_all_end as PMPI_File_read_all_end
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status) __attribute__((weak,alias("PMPI_File_read_all_end")));
+int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status) __attribute__((weak, alias("PMPI_File_read_all_end")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -51,9 +51,9 @@ int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status)
 /* prevent multiple definitions of this routine */
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_read_all_end(MPI_File fh,
-			    void *buf,
-			    char *myname,
-			    MPI_Status *status)
+                            void *buf,
+                            char *myname,
+                            MPI_Status *status)
 {
     int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
@@ -67,18 +67,19 @@ int MPIOI_File_read_all_end(MPI_File fh,
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
 
-    if (!(adio_fh->split_coll_count)) {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_IO, 
-					  "**iosplitcollnone", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+    if (!(adio_fh->split_coll_count))
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_IO,
+                                          "**iosplitcollnone", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
-    /* --END ERROR HANDLING-- */
+        /* --END ERROR HANDLING-- */
 
 #ifdef HAVE_STATUS_SET_BYTES
     if (status != MPI_STATUS_IGNORE)
-       *status = adio_fh->split_status;
+        *status = adio_fh->split_status;
 #endif
     adio_fh->split_coll_count = 0;
 

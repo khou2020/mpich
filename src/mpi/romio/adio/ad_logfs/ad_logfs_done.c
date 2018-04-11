@@ -10,14 +10,12 @@
 #include "adioi.h"
 #include "layered.h"
 
-int ADIOI_LOGFS_ReadDone(ADIO_Request * request, ADIO_Status * status, int
-                         *error_code)
+int ADIOI_LOGFS_ReadDone(ADIO_Request *request, ADIO_Status *status, int *error_code)
 {
     return 1;
 }
 
-int ADIOI_LOGFS_WriteDone(ADIO_Request * request, ADIO_Status * status, int
-                          *error_code)
+int ADIOI_LOGFS_WriteDone(ADIO_Request *request, ADIO_Status *status, int *error_code)
 {
     return 1;
 }

@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_get_position_shared as PMPI_File_get_position_shared
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset) __attribute__((weak,alias("PMPI_File_get_position_shared")));
+int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset) __attribute__((weak, alias("PMPI_File_get_position_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -39,7 +39,7 @@ Output Parameters:
 @*/
 int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_POSITION_SHARED";
 
@@ -56,7 +56,7 @@ int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset)
     ADIO_Get_shared_fp(adio_fh, 0, offset, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
 fn_exit:

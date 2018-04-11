@@ -18,7 +18,7 @@
 #pragma _CRI duplicate MPI_File_get_position as PMPI_File_get_position
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_position(MPI_File fh, MPI_Offset *offset) __attribute__((weak,alias("PMPI_File_get_position")));
+int MPI_File_get_position(MPI_File fh, MPI_Offset *offset) __attribute__((weak, alias("PMPI_File_get_position")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -41,7 +41,7 @@ Output Parameters:
 @*/
 int MPI_File_get_position(MPI_File fh, MPI_Offset *offset)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_GET_POSITION";
 

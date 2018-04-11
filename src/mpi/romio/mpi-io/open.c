@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_open as PMPI_File_open
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File *fh) __attribute__((weak,alias("PMPI_File_open")));
+int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File *fh) __attribute__((weak, alias("PMPI_File_open")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -33,17 +33,16 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info,
 #endif
 
 #ifdef ROMIO_ICACHE
-#include "adioi_fs_proto.h" 
-#define ROMIO_KEY_ICACHE_ENABLE      "romio_icache" 
+#include "adioi_fs_proto.h"
+#define ROMIO_KEY_ICACHE_ENABLE "romio_icache"
 #endif
 
 #ifdef ROMIO_TRACE
-#define ROMIO_KEY_TRACE_ENABLE       "romio_trace"
-#define ROMIO_KEY_TRACE_TWICE_ENABLE "romio_trace_twice" 
+#define ROMIO_KEY_TRACE_ENABLE "romio_trace"
+#define ROMIO_KEY_TRACE_TWICE_ENABLE "romio_trace_twice"
 #endif
 
 #include <assert.h>
-
 
 extern int ADIO_Init_keyval;
 #if ROMIO_TRACE || ROMIO_ICACHE
@@ -52,31 +51,30 @@ extern int ADIO_Init_keyval;
  * If so, change fns to point to the new fsops, and save the old one in the
  * pointer pointed to by 'old'
  */
-int check_layered (MPI_Info info, const char * s, ADIOI_Fns * myfns,
-      ADIOI_Fns ** fns, ADIOI_Fns ** old)
+int check_layered(MPI_Info info, const char *s, ADIOI_Fns *myfns,
+                  ADIOI_Fns **fns, ADIOI_Fns **old)
 {
-   int enable = 0;
+    int enable = 0;
 
-   if (MPI_INFO_NULL != info)
-   {
-      int flag;
-      char dummy;
+    if (MPI_INFO_NULL != info)
+    {
+        int flag;
+        char dummy;
 
-      MPI_Info_get (info, (char *)s, 1, &dummy, &flag);
-      if (flag)
-	 enable=1;
-   }
-   if (enable)
-   {
-      *old = *fns;
-      *fns = myfns;
-   }
+        MPI_Info_get(info, (char *)s, 1, &dummy, &flag);
+        if (flag)
+            enable = 1;
+    }
+    if (enable)
+    {
+        *old = *fns;
+        *fns = myfns;
+    }
 
-   return enable;
+    return enable;
 }
 #endif
 
- 
 /*@
     MPI_File_open - Opens a file
 
@@ -94,7 +92,7 @@ Output Parameters:
 int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
                   MPI_Info info, MPI_File *fh)
 {
-    int error_code = MPI_SUCCESS, file_system, flag, tmp_amode=0, rank;
+    int error_code = MPI_SUCCESS, file_system, flag, tmp_amode = 0, rank;
     char *tmp;
     MPI_Comm dupcomm = MPI_COMM_NULL;
     ADIOI_Fns *fsops;
@@ -102,13 +100,13 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
 #ifdef ROMIO_ICACHE
     int ad_icache_enable = 0;
-    ADIOI_Fns * ad_icache_old;
+    ADIOI_Fns *ad_icache_old;
 #endif
 #ifdef ROMIO_TRACE
     int ad_trace_enable = 0;
     int ad_trace_twice_enable = 0;
-    ADIOI_Fns * ad_trace_old;
-    ADIOI_Fns * ad_trace_twice_old;
+    ADIOI_Fns *ad_trace_old;
+    ADIOI_Fns *ad_trace_twice_old;
 #endif
 
 #ifdef MPI_hpux
@@ -116,10 +114,11 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     HPMP_IO_OPEN_START(fl_xmpi, comm);
     HPMP_IO_OPEN_START(fl_xmpi, comm);
 #endif /* MPI_hpux */
-    
+
     {
         MPI_Comm_rank(comm, &rank);
-        if(rank == 0){
+        if (rank == 0)
+        {
             printf("LogFS_in_ROMIO: %s\n", filename);
         }
     }
@@ -135,45 +134,47 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     /* --BEGIN ERROR HANDLING-- */
     if (error_code || flag)
     {
-	error_code = MPIO_Err_create_code(error_code, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_COMM, 
-					  "**commnotintra", 0);
-	goto fn_fail;
+        error_code = MPIO_Err_create_code(error_code, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_COMM,
+                                          "**commnotintra", 0);
+        goto fn_fail;
     }
 
-    if ( ((amode&MPI_MODE_RDONLY)?1:0) + ((amode&MPI_MODE_RDWR)?1:0) +
-	 ((amode&MPI_MODE_WRONLY)?1:0) != 1 )
+    if (((amode & MPI_MODE_RDONLY) ? 1 : 0) + ((amode & MPI_MODE_RDWR) ? 1 : 0) +
+            ((amode & MPI_MODE_WRONLY) ? 1 : 0) !=
+        1)
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_AMODE, 
-					  "**fileamodeone", 0);
-	goto fn_fail;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_AMODE,
+                                          "**fileamodeone", 0);
+        goto fn_fail;
     }
 
-    if ((amode & MPI_MODE_RDONLY) && 
-            ((amode & MPI_MODE_CREATE) || (amode & MPI_MODE_EXCL)))
+    if ((amode & MPI_MODE_RDONLY) &&
+        ((amode & MPI_MODE_CREATE) || (amode & MPI_MODE_EXCL)))
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_AMODE, 
-					  "**fileamoderead", 0);
-	goto fn_fail;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_AMODE,
+                                          "**fileamoderead", 0);
+        goto fn_fail;
     }
 
     if ((amode & MPI_MODE_RDWR) && (amode & MPI_MODE_SEQUENTIAL))
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_AMODE, 
-					  "**fileamodeseq", 0);
-	goto fn_fail;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_AMODE,
+                                          "**fileamodeseq", 0);
+        goto fn_fail;
     }
 
     MPI_Comm_dup(comm, &dupcomm);
 
-/* check if ADIO has been initialized. If not, initialize it */
+    /* check if ADIO has been initialized. If not, initialize it */
     MPIR_MPIOInit(&error_code);
-    if (error_code != MPI_SUCCESS) goto fn_fail;
+    if (error_code != MPI_SUCCESS)
+        goto fn_fail;
 
-/* check if amode is the same on all processes: at first glance, one might try
+    /* check if amode is the same on all processes: at first glance, one might try
  * to use a built-in operator like MPI_BAND, but we need every mpi process to
  * agree the amode was not the same.  Consider process A with
  * MPI_MODE_CREATE|MPI_MODE_RDWR, and B with MPI_MODE_RDWR:  MPI_BAND yields
@@ -181,11 +182,12 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
  * detected an error */
     MPI_Allreduce(&amode, &tmp_amode, 1, MPI_INT, ADIO_same_amode, dupcomm);
 
-    if (tmp_amode == ADIO_AMODE_NOMATCH) {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-			myname, __LINE__, MPI_ERR_NOT_SAME,
-			"**fileamodediff", 0);
-	goto fn_fail;
+    if (tmp_amode == ADIO_AMODE_NOMATCH)
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_NOT_SAME,
+                                          "**fileamodediff", 0);
+        goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
 
@@ -193,15 +195,15 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
     /* resolve file system type from file name; this is a collective call */
     ADIO_ResolveFileType(dupcomm, filename, &file_system, &fsops,
-	    &error_code);
+                         &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
     {
-	/* ADIO_ResolveFileType() will print as informative a message as it
+        /* ADIO_ResolveFileType() will print as informative a message as it
 	 * possibly can or call MPIO_Err_setmsg.  We just need to propagate 
 	 * the error up.
 	 */
-	goto fn_fail;
+        goto fn_fail;
     }
 
     /* --END ERROR HANDLING-- */
@@ -211,79 +213,79 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
      * drive specifications (e.g. c:\...) */
 
     tmp = strchr(filename, ':');
-    if (tmp > filename + 1) {
-	filename = tmp + 1;
+    if (tmp > filename + 1)
+    {
+        filename = tmp + 1;
     }
 
-/* use default values for disp, etype, filetype */    
+    /* use default values for disp, etype, filetype */
 
     *fh = ADIO_Open(comm, dupcomm, filename, file_system, fsops, amode, 0,
-		    MPI_BYTE, MPI_BYTE, info, ADIO_PERM_NULL, &error_code);
+                    MPI_BYTE, MPI_BYTE, info, ADIO_PERM_NULL, &error_code);
     if (error_code == MPI_SUCCESS)
     {
 
-       /* fout hier: volgorde verkeerd bij meerdere slaves;
+    /* fout hier: volgorde verkeerd bij meerdere slaves;
         * stack nodig?
 	* (google translate: wrong here: order wrong in multiple slaves; Stack
 	* need? )*/
 
 #ifdef ROMIO_TRACE
-    ad_trace_enable = check_layered (info, ROMIO_KEY_TRACE_ENABLE,
-	  &ADIO_TRACE_operations, &fsops, &ad_trace_old);
+        ad_trace_enable = check_layered(info, ROMIO_KEY_TRACE_ENABLE,
+                                        &ADIO_TRACE_operations, &fsops, &ad_trace_old);
 #endif
 
 #ifdef ROMIO_ICACHE
-    ad_icache_enable = check_layered (info, ROMIO_KEY_ICACHE_ENABLE,
-	  &ADIO_ICACHE_operations, &fsops, &ad_icache_old);
+        ad_icache_enable = check_layered(info, ROMIO_KEY_ICACHE_ENABLE,
+                                         &ADIO_ICACHE_operations, &fsops, &ad_icache_old);
 #endif
 
 #ifdef ROMIO_TRACE
-    ad_trace_twice_enable = check_layered (info, ROMIO_KEY_TRACE_TWICE_ENABLE,
-	  &ADIO_TRACE_operations, &fsops, &ad_trace_twice_old);
+        ad_trace_twice_enable = check_layered(info, ROMIO_KEY_TRACE_TWICE_ENABLE,
+                                              &ADIO_TRACE_operations, &fsops, &ad_trace_twice_old);
 #endif
-
     }
 
-
-
-
     /* --BEGIN ERROR HANDLING-- */
-    if (error_code != MPI_SUCCESS) {
-	goto fn_fail;
+    if (error_code != MPI_SUCCESS)
+    {
+        goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
 
     /* if MPI_MODE_SEQUENTIAL requested, file systems cannot do explicit offset
      * or independent file pointer accesses, leaving not much else aside from
      * shared file pointer accesses. */
-    if ( !ADIO_Feature((*fh), ADIO_SHARED_FP) && (amode & MPI_MODE_SEQUENTIAL)) 
+    if (!ADIO_Feature((*fh), ADIO_SHARED_FP) && (amode & MPI_MODE_SEQUENTIAL))
     {
-        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-			                  myname, __LINE__, 
-					  MPI_ERR_UNSUPPORTED_OPERATION,
-					  "**iosequnsupported", 0);
-	ADIO_Close(*fh, &error_code);
-	goto fn_fail;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__,
+                                          MPI_ERR_UNSUPPORTED_OPERATION,
+                                          "**iosequnsupported", 0);
+        ADIO_Close(*fh, &error_code);
+        goto fn_fail;
     }
 
     /* determine name of file that will hold the shared file pointer */
     /* can't support shared file pointers on a file system that doesn't
        support file locking. */
-    if ((error_code == MPI_SUCCESS) && 
-		    ADIO_Feature((*fh), ADIO_SHARED_FP)) {
-	MPI_Comm_rank(dupcomm, &rank);
-	ADIOI_Shfp_fname(*fh, rank, &error_code);
-	if (error_code != MPI_SUCCESS)
-	    goto fn_fail;
+    if ((error_code == MPI_SUCCESS) &&
+        ADIO_Feature((*fh), ADIO_SHARED_FP))
+    {
+        MPI_Comm_rank(dupcomm, &rank);
+        ADIOI_Shfp_fname(*fh, rank, &error_code);
+        if (error_code != MPI_SUCCESS)
+            goto fn_fail;
 
         /* if MPI_MODE_APPEND, set the shared file pointer to end of file.
            indiv. file pointer already set to end of file in ADIO_Open. 
            Here file view is just bytes. */
-	if ((*fh)->access_mode & MPI_MODE_APPEND) {
-	    if (rank == (*fh)->hints->ranklist[0])  /* only one person need set the sharedfp */
-		    ADIO_Set_shared_fp(*fh, (*fh)->fp_ind, &error_code);
-	    MPI_Barrier(dupcomm);
-	}
+        if ((*fh)->access_mode & MPI_MODE_APPEND)
+        {
+            if (rank == (*fh)->hints->ranklist[0]) /* only one person need set the sharedfp */
+                ADIO_Set_shared_fp(*fh, (*fh)->fp_ind, &error_code);
+            MPI_Barrier(dupcomm);
+        }
     }
 
 #ifdef MPI_hpux
@@ -295,7 +297,8 @@ fn_exit:
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    if (dupcomm != MPI_COMM_NULL) MPI_Comm_free(&dupcomm);
+    if (dupcomm != MPI_COMM_NULL)
+        MPI_Comm_free(&dupcomm);
     error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */

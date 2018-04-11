@@ -13,17 +13,16 @@
 #include "logfs.h"
 
 /* delete can only be called in standalone mode 
- * (unless we also modify the global delete to detect logfs files) */ 
+ * (unless we also modify the global delete to detect logfs files) */
 void ADIOI_LOGFS_Delete(const char *filename, int *error_code)
 {
     *error_code = MPI_SUCCESS;
 
     /* logfs_delete removes all the logfs ancilary files (.logfs, .meta,
      * .data) related to 'filename', but not the actual file */
-    logfs_delete (filename);
+    logfs_delete(filename);
 
     /* MPI_File_delete already stripped the prefix.  TODO: How do we avoid a
      * loop if we are using logfs as a data representation ? */
     *error_code = MPI_File_delete(filename, MPI_INFO_NULL);
-
 }

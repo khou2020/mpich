@@ -13,13 +13,14 @@
 #include "adio_extern.h"
 #include "layered.h"
 
-void ADIOI_LOGFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t * fcntl_struct, int *error_code)
+void ADIOI_LOGFS_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct, int *error_code)
 {
     static char myname[] = "ADIOI_LOGFS_FCNTL";
 
     *error_code = MPI_SUCCESS;
 
-    switch (flag) {
+    switch (flag)
+    {
     case ADIO_FCNTL_GET_FSIZE:
         /* return filesize from memory */
         fcntl_struct->fsize = logfs_getfsize(fd);

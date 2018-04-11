@@ -13,13 +13,14 @@
 
 void ADIOI_LOGFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
                                  MPI_Datatype datatype, int file_ptr_type,
-                                 ADIO_Offset offset, ADIO_Status * status, int *error_code)
+                                 ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
     int ret;
 
     *error_code = MPI_SUCCESS;
 
-    if (ADIO_INDIVIDUAL == file_ptr_type) {
+    if (ADIO_INDIVIDUAL == file_ptr_type)
+    {
         /* fp->ind is in bytes ignoring view */
         offset = fd->fp_ind - fd->disp;
         offset /= fd->etype_size;
@@ -29,7 +30,8 @@ void ADIOI_LOGFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     /* collective read */
     ret = logfs_readdata(fd, buf, count, datatype, offset, 1, status);
 
-    if (file_ptr_type == ADIO_INDIVIDUAL) {
+    if (file_ptr_type == ADIO_INDIVIDUAL)
+    {
         int size;
         int datasize;
         MPI_Aint extent;

@@ -6,9 +6,10 @@
 #ifndef LOGFS_USER_H
 #define LOGFS_USER_H
 
-typedef struct {
-    int (*init) ();
-    int (*done) ();
+typedef struct
+{
+    int (*init)();
+    int (*done)();
 } logfs_user_replay_cb;
 
 #endif

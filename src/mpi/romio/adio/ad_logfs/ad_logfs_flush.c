@@ -25,7 +25,8 @@ void ADIOI_LOGFS_Flush(ADIO_File fd, int *error_code)
     /* flush */
     logfs_flush(fd);
 
-    if (!logfs_standalone(fd)) {
+    if (!logfs_standalone(fd))
+    {
         /* also flush the real file */
         handle = ADIOI_Layer_switch_in(fd);
         fd->fns->ADIOI_xxx_Flush(fd, error_code);

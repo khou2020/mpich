@@ -15,25 +15,27 @@ void ADIOI_LOGFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
     *error_code = MPI_SUCCESS;
 
-
     /* In standalone mode we have complete control over hints, so just
      * process the users' info structure and return;
      * However, somehow we still need to call the gen_setinfo
      * since otherwise there are segmentation faults in other parts
      * of the code that depend on certaing things to be set
      * (two-phase for example) */
-    if (logfs_standalone(fd)) {
+    if (logfs_standalone(fd))
+    {
 
         /* this modifies fd->info */
         ADIOI_GEN_SetInfo(fd, users_info, error_code);
 
-        if (fd->fs_ptr) {
+        if (fd->fs_ptr)
+        {
             /* We have a fs_ptr, so update our internal values and
              * update  fd->info (which is return by MPI_File_get_info) */
             logfs_setinfo(fd, users_info);
             return;
         }
-        else {
+        else
+        {
             /* no fs-ptr yet; This must mean that we're in the process
              * of opening a new file in standalone mode;
              * ADIO_SetInfo is called *BEFORE* ADIO_Open is called;
@@ -64,12 +66,14 @@ void ADIOI_LOGFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     /* if we have a slave, pass the setinfo call, if not use the generic
      * function to update the info argument which will be passed to the slave
      * once it is set */
-    if (fd->fs_ptr && ADIOI_Layer_is_slave_set(fd)) {
+    if (fd->fs_ptr && ADIOI_Layer_is_slave_set(fd))
+    {
         void *handle = ADIOI_Layer_switch_in(fd);
         fd->fns->ADIOI_xxx_SetInfo(fd, users_info, error_code);
         ADIOI_Layer_switch_out(fd, handle);
     }
-    else {
+    else
+    {
         /* this basically stores the hint in fd->info; we reuse this hint
          * the moment we can call the slave's open; we call set_info on the slave
          * (which takes a copy of the hint) and free the original hint*/

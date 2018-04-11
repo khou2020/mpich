@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_read_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                         MPI_Status *status) __attribute__((weak,alias("PMPI_File_read_shared")));
+                         MPI_Status *status) __attribute__((weak, alias("PMPI_File_read_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -43,14 +43,14 @@ Output Parameters:
 .N fortran
 @*/
 int MPI_File_read_shared(MPI_File fh, void *buf, int count,
-			 MPI_Datatype datatype, MPI_Status *status)
+                         MPI_Datatype datatype, MPI_Status *status)
 {
-    int error_code=MPI_SUCCESS, buftype_is_contig, filetype_is_contig;
+    int error_code = MPI_SUCCESS, buftype_is_contig, filetype_is_contig;
     static char myname[] = "MPI_FILE_READ_SHARED";
     MPI_Count datatype_size;
     ADIO_Offset off, shared_fp, incr, bufsize;
     ADIO_File adio_fh;
-    void *xbuf=NULL, *e32_buf=NULL;
+    void *xbuf = NULL, *e32_buf = NULL;
 
     ROMIO_THREAD_CS_ENTER();
 
@@ -68,13 +68,13 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
     MPIO_CHECK_COUNT_SIZE(adio_fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    if (count*datatype_size == 0)
+    if (count * datatype_size == 0)
     {
 #ifdef HAVE_STATUS_SET_BYTES
-	MPIR_Status_set_bytes(status, datatype, 0);
+        MPIR_Status_set_bytes(status, datatype, 0);
 #endif
-	error_code = MPI_SUCCESS;
-	goto fn_exit;
+        error_code = MPI_SUCCESS;
+        goto fn_exit;
     }
 
     /* --BEGIN ERROR HANDLING-- */
@@ -88,14 +88,14 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
-    incr = (count*datatype_size)/adio_fh->etype_size;
+    incr = (count * datatype_size) / adio_fh->etype_size;
 
     ADIO_Get_shared_fp(adio_fh, incr, &shared_fp, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
     {
         error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
@@ -107,14 +107,14 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
         if (error_code != MPI_SUCCESS)
             goto fn_exit;
 
-        e32_buf = ADIOI_Malloc(e32_size*count);
-	xbuf = e32_buf;
+        e32_buf = ADIOI_Malloc(e32_size * count);
+        xbuf = e32_buf;
     }
 
     /* contiguous or strided? */
     if (buftype_is_contig && filetype_is_contig)
     {
-	/* convert count and shared_fp to bytes */
+        /* convert count and shared_fp to bytes */
         bufsize = datatype_size * count;
         off = adio_fh->disp + adio_fh->etype_size * shared_fp;
 
@@ -126,27 +126,28 @@ int MPI_File_read_shared(MPI_File fh, void *buf, int count,
             ADIOI_WRITE_LOCK(adio_fh, off, SEEK_SET, bufsize);
 
         ADIO_ReadContig(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
-                        off, status, &error_code); 
+                        off, status, &error_code);
 
         if ((adio_fh->atomicity) && (adio_fh->file_system != ADIO_NFS))
             ADIOI_UNLOCK(adio_fh, off, SEEK_SET, bufsize);
     }
     else
     {
-	ADIO_ReadStrided(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
-                          shared_fp, status, &error_code);
-	/* For strided and atomic mode, locking is done in ADIO_ReadStrided */
+        ADIO_ReadStrided(adio_fh, xbuf, count, datatype, ADIO_EXPLICIT_OFFSET,
+                         shared_fp, status, &error_code);
+        /* For strided and atomic mode, locking is done in ADIO_ReadStrided */
     }
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-    if (e32_buf != NULL) {
+    if (e32_buf != NULL)
+    {
         error_code = MPIU_read_external32_conversion_fn(buf, datatype,
-                count, e32_buf);
-	ADIOI_Free(e32_buf);
+                                                        count, e32_buf);
+        ADIOI_Free(e32_buf);
     }
 fn_exit:
     ROMIO_THREAD_CS_EXIT();

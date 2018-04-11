@@ -46,12 +46,11 @@ static inline int logfs_standalone(ADIO_File fd)
     return (fd->file_system == ADIO_LOGFS);
 }
 
-
 static inline struct ADIO_LOGFS_Data *logfs_data(ADIO_File fd)
 {
     if (logfs_standalone(fd))
-        return (struct ADIO_LOGFS_Data *) fd->fs_ptr;
-    return (struct ADIO_LOGFS_Data *) ADIOI_Layer_get_data(fd);
+        return (struct ADIO_LOGFS_Data *)fd->fs_ptr;
+    return (struct ADIO_LOGFS_Data *)ADIOI_Layer_get_data(fd);
 }
 
 /* check if logfs is active on the filehandle */
@@ -67,8 +66,7 @@ int logfs_activate(ADIO_File fd, MPI_Info info);
 int logfs_deactivate(ADIO_File fd);
 
 /* deletes log files associated with the given file */
-int logfs_delete (const char * filename);
-
+int logfs_delete(const char *filename);
 
 /* return true if the given filename has a logfs log attached */
 int logfs_probe(MPI_Comm comm, const char *filename);
@@ -82,7 +80,7 @@ int logfs_writedata(ADIO_File fd, const void *buf,
 
 int logfs_readdata(ADIO_File fd, void *buf,
                    int count, MPI_Datatype memtype, ADIO_Offset offset,
-                   int collective, MPI_Status * status);
+                   int collective, MPI_Status *status);
 
 /* flush  logfiles and real file */
 int logfs_flush(ADIO_File fd);

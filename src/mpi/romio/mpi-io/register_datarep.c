@@ -18,8 +18,8 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function *read_conversion_fn,
-			 MPI_Datarep_conversion_function *write_conversion_fn,
-			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) __attribute__((weak,alias("PMPI_Register_datarep")));
+                         MPI_Datarep_conversion_function *write_conversion_fn,
+                         MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) __attribute__((weak, alias("PMPI_Register_datarep")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -53,12 +53,12 @@ Input Parameters:
   
   @*/
 int MPI_Register_datarep(ROMIO_CONST char *datarep,
-			 MPI_Datarep_conversion_function *read_conversion_fn,
-			 MPI_Datarep_conversion_function *write_conversion_fn,
-			 MPI_Datarep_extent_function *dtype_file_extent_fn,
-			 void *extra_state)
+                         MPI_Datarep_conversion_function *read_conversion_fn,
+                         MPI_Datarep_conversion_function *write_conversion_fn,
+                         MPI_Datarep_extent_function *dtype_file_extent_fn,
+                         void *extra_state)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIOI_Datarep *adio_datarep;
     static char myname[] = "MPI_REGISTER_DATAREP";
 
@@ -68,71 +68,74 @@ int MPI_Register_datarep(ROMIO_CONST char *datarep,
     /* check datarep name (use strlen instead of strnlen because
        strnlen is not portable) */
     if (datarep == NULL ||
-	strlen(datarep) < 1 ||
-	strlen(datarep) > MPI_MAX_DATAREP_STRING)
+        strlen(datarep) < 1 ||
+        strlen(datarep) > MPI_MAX_DATAREP_STRING)
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					  MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__,
-					  MPI_ERR_ARG,
-					  "**datarepname", 0);
-	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__,
+                                          MPI_ERR_ARG,
+                                          "**datarepname", 0);
+        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
     MPIR_MPIOInit(&error_code);
-    if (error_code != MPI_SUCCESS) goto fn_exit;
+    if (error_code != MPI_SUCCESS)
+        goto fn_exit;
 
     /* --BEGIN ERROR HANDLING-- */
     /* check datarep isn't already registered */
-    for (adio_datarep = ADIOI_Datarep_head; adio_datarep; adio_datarep = adio_datarep->next) {
-	if (!strncmp(datarep, adio_datarep->name, MPI_MAX_DATAREP_STRING)) {
-	    error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					      MPIR_ERR_RECOVERABLE,
-					      myname, __LINE__,
-					      MPI_ERR_DUP_DATAREP,
-					      "**datarepused",
-					      "**datarepused %s",
-					      datarep);
-	    error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	    goto fn_exit;
-	}
+    for (adio_datarep = ADIOI_Datarep_head; adio_datarep; adio_datarep = adio_datarep->next)
+    {
+        if (!strncmp(datarep, adio_datarep->name, MPI_MAX_DATAREP_STRING))
+        {
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                              MPIR_ERR_RECOVERABLE,
+                                              myname, __LINE__,
+                                              MPI_ERR_DUP_DATAREP,
+                                              "**datarepused",
+                                              "**datarepused %s",
+                                              datarep);
+            error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+            goto fn_exit;
+        }
     }
 
     /* Check Non-NULL Read and Write conversion function pointer */
     /* Read and Write conversions are currently not supported.   */
-    if ( (read_conversion_fn != NULL) || (write_conversion_fn != NULL) )
+    if ((read_conversion_fn != NULL) || (write_conversion_fn != NULL))
     {
         error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
                                           myname, __LINE__,
                                           MPI_ERR_CONVERSION,
                                           "**drconvnotsupported", 0);
 
-	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        goto fn_exit;
     }
 
     /* check extent function pointer */
     if (dtype_file_extent_fn == NULL)
     {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					  MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__,
-					  MPI_ERR_ARG,
-					  "**datarepextent", 0);
-	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_create_code(MPI_SUCCESS,
+                                          MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__,
+                                          MPI_ERR_ARG,
+                                          "**datarepextent", 0);
+        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
     adio_datarep = ADIOI_Malloc(sizeof(ADIOI_Datarep));
     adio_datarep->name = ADIOI_Strdup(datarep);
-    adio_datarep->state         = extra_state;
-    adio_datarep->read_conv_fn  = read_conversion_fn;
+    adio_datarep->state = extra_state;
+    adio_datarep->read_conv_fn = read_conversion_fn;
     adio_datarep->write_conv_fn = write_conversion_fn;
-    adio_datarep->extent_fn     = dtype_file_extent_fn;
-    adio_datarep->next          = ADIOI_Datarep_head;
+    adio_datarep->extent_fn = dtype_file_extent_fn;
+    adio_datarep->next = ADIOI_Datarep_head;
 
     ADIOI_Datarep_head = adio_datarep;
 

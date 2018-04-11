@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_set_size as PMPI_File_set_size
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_set_size(MPI_File fh, MPI_Offset size) __attribute__((weak,alias("PMPI_File_set_size")));
+int MPI_File_set_size(MPI_File fh, MPI_Offset size) __attribute__((weak, alias("PMPI_File_set_size")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_SET_SIZE";
     MPI_Offset tmp_sz, max_sz, min_sz;
@@ -45,7 +45,7 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
     int fl_xmpi;
 
     HPMP_IO_START(fl_xmpi, BLKMPIFILESETSIZE, TRDTBLOCK, adio_fh,
-		  MPI_DATATYPE_NULL, -1);
+                  MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */
 
     ROMIO_THREAD_CS_ENTER();
@@ -56,12 +56,13 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
     MPIO_CHECK_NOT_SEQUENTIAL_MODE(adio_fh, myname, error_code);
 
-    if (size < 0) {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_ARG,
-					  "**iobadsize", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+    if (size < 0)
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_ARG,
+                                          "**iobadsize", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
     MPIO_CHECK_WRITABLE(fh, myname, error_code);
     /* --END ERROR HANDLING-- */
@@ -71,28 +72,30 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
     MPI_Allreduce(&tmp_sz, &min_sz, 1, ADIO_OFFSET, MPI_MIN, adio_fh->comm);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (max_sz != min_sz) {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_ARG,
-					  "**notsame", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+    if (max_sz != min_sz)
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_ARG,
+                                          "**notsame", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
-    if (!ADIO_Feature(adio_fh, ADIO_SCALABLE_RESIZE)) {
-	/* rare stupid file systems (like NFS) need to carry out resize on all
+    if (!ADIO_Feature(adio_fh, ADIO_SCALABLE_RESIZE))
+    {
+        /* rare stupid file systems (like NFS) need to carry out resize on all
 	 * processes */
-	ADIOI_TEST_DEFERRED(adio_fh, "MPI_File_set_size", &error_code);
+        ADIOI_TEST_DEFERRED(adio_fh, "MPI_File_set_size", &error_code);
     }
 
     ADIO_Resize(adio_fh, size, &error_code);
     /* TODO: what to do with error code? */
-    
+
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-    /* --END ERROR HANDLING-- */
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        /* --END ERROR HANDLING-- */
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, adio_fh, MPI_DATATYPE_NULL, -1);

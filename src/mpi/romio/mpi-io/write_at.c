@@ -16,9 +16,9 @@
 #pragma _CRI duplicate MPI_File_write_at as PMPI_File_write_at
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void * buf, int count,
+int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                       MPI_Datatype datatype, MPI_Status *status)
-    __attribute__((weak,alias("PMPI_File_write_at")));
+    __attribute__((weak, alias("PMPI_File_write_at")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -56,7 +56,7 @@ int MPI_File_write_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
 
     /* MPIOI_File_write() defined in mpi-io/write.c */
     error_code = MPIOI_File_write(fh, offset, ADIO_EXPLICIT_OFFSET, buf,
-				  count, datatype, myname, status);
+                                  count, datatype, myname, status);
 
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, fh, datatype, count);

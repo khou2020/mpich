@@ -15,8 +15,7 @@
 
 void ADIOI_LOGFS_WriteContig(ADIO_File fd, const void *buf, int count,
                              MPI_Datatype datatype, int file_ptr_type,
-                             ADIO_Offset offset, ADIO_Status * status, int
-                             *error_code)
+                             ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
     int myrank, nprocs, datatype_size;
     /*int etype_extent; */
@@ -50,7 +49,8 @@ void ADIOI_LOGFS_WriteContig(ADIO_File fd, const void *buf, int count,
      * ADIOI_Layer_switch_out(fd,handle);
      */
 
-    if (status) {
+    if (status)
+    {
         int bufsize, size;
         /* Don't set status if it isn't needed */
         MPI_Type_size(datatype, &size);
@@ -61,7 +61,7 @@ void ADIOI_LOGFS_WriteContig(ADIO_File fd, const void *buf, int count,
 
 void ADIOI_LOGFS_WriteStrided(ADIO_File fd, const void *buf, int count,
                               MPI_Datatype datatype, int file_ptr_type,
-                              ADIO_Offset offset, ADIO_Status * status, int *error_code)
+                              ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
     int myrank, nprocs;
 
@@ -73,7 +73,8 @@ void ADIOI_LOGFS_WriteStrided(ADIO_File fd, const void *buf, int count,
      * myrank, nprocs, fd->filename);
      * FPRINTF(stdout, "Filetype: fd->file_system: %i", fd->file_system);
      */
-    if (ADIO_INDIVIDUAL == file_ptr_type) {
+    if (ADIO_INDIVIDUAL == file_ptr_type)
+    {
         offset = fd->fp_ind - fd->disp;
         offset /= fd->etype_size;
     }
@@ -81,7 +82,8 @@ void ADIOI_LOGFS_WriteStrided(ADIO_File fd, const void *buf, int count,
     /* now offset in etypes rel to displacement of view */
     logfs_writedata(fd, buf, count, datatype, offset, 0);
 
-    if (file_ptr_type == ADIO_INDIVIDUAL) {
+    if (file_ptr_type == ADIO_INDIVIDUAL)
+    {
         int size;
         int datasize;
         MPI_Aint extent;
@@ -92,7 +94,8 @@ void ADIOI_LOGFS_WriteStrided(ADIO_File fd, const void *buf, int count,
         fd->fp_ind = offset + extent * ((datasize * count) / size);
     }
 
-    if (status) {
+    if (status)
+    {
         int bufsize, size;
         /* Don't set status if it isn't needed */
         MPI_Type_size(datatype, &size);

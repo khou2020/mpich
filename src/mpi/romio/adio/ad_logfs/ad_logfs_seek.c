@@ -39,9 +39,7 @@ ADIO_Offset ADIOI_LOGFS_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
      * ADIOI_Gen_SeekIndividual does this for us
      */
 
-
     /* have ADIO_GEN_SeekIndividual update the individual filepointer
      * (fd->fp_ind) */
     return ADIOI_GEN_SeekIndividual(fd, offset, whence, error_code);
-
 }

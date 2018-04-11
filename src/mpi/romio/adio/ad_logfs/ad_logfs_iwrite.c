@@ -23,16 +23,13 @@
  *  function in the start func
  */
 
-
-
 /* ADIOI_LOGFS_IwriteContig()
  *
  * Implemented by immediately calling WriteContig()
  */
 void ADIOI_LOGFS_IwriteContig(ADIO_File fd, const void *buf, int count,
                               MPI_Datatype datatype, int file_ptr_type,
-                              ADIO_Offset offset, ADIO_Request * request, int
-                              *error_code)
+                              ADIO_Offset offset, ADIO_Request *request, int *error_code)
 {
     ADIO_Status status;
     MPI_Offset len;
@@ -51,8 +48,7 @@ void ADIOI_LOGFS_IwriteContig(ADIO_File fd, const void *buf, int count,
 
 void ADIOI_LOGFS_IwriteStrided(ADIO_File fd, const void *buf, int count,
                                MPI_Datatype datatype, int file_ptr_type,
-                               ADIO_Offset offset, ADIO_Request * request, int
-                               *error_code)
+                               ADIO_Offset offset, ADIO_Request *request, int *error_code)
 {
     ADIO_Status status;
     MPI_Count typesize;
@@ -60,7 +56,7 @@ void ADIOI_LOGFS_IwriteStrided(ADIO_File fd, const void *buf, int count,
     MPI_Type_size_x(datatype, &typesize);
 
     ADIOI_LOGFS_WriteStrided(fd, buf, count, datatype, file_ptr_type,
-	    offset, &status, error_code);
+                             offset, &status, error_code);
 
     MPIO_Completed_request_create(&fd, typesize * count, error_code, request);
 }

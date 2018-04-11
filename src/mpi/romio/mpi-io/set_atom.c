@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_set_atomicity as PMPI_File_set_atomicity
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_set_atomicity(MPI_File fh, int flag) __attribute__((weak,alias("PMPI_File_set_atomicity")));
+int MPI_File_set_atomicity(MPI_File fh, int flag) __attribute__((weak, alias("PMPI_File_set_atomicity")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -36,7 +36,7 @@ Input Parameters:
 @*/
 int MPI_File_set_atomicity(MPI_File fh, int flag)
 {
-    int error_code=MPI_SUCCESS, tmp_flag;
+    int error_code = MPI_SUCCESS, tmp_flag;
     static char myname[] = "MPI_FILE_SET_ATOMICITY";
     ADIO_Fcntl_t *fcntl_struct;
     ADIO_File adio_fh;
@@ -51,36 +51,38 @@ int MPI_File_set_atomicity(MPI_File fh, int flag)
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
-    if (flag) flag = 1;  /* take care of non-one values! */
+    if (flag)
+        flag = 1; /* take care of non-one values! */
 
-/* check if flag is the same on all processes */
+    /* check if flag is the same on all processes */
     tmp_flag = flag;
     MPI_Bcast(&tmp_flag, 1, MPI_INT, 0, adio_fh->comm);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (tmp_flag != flag) {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_ARG, 
-					  "**notsame", 0);
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
-	goto fn_exit;
+    if (tmp_flag != flag)
+    {
+        error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+                                          myname, __LINE__, MPI_ERR_ARG,
+                                          "**notsame", 0);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
-    if (adio_fh->atomicity == flag){
-	    error_code = MPI_SUCCESS;
-	    goto fn_exit;
+    if (adio_fh->atomicity == flag)
+    {
+        error_code = MPI_SUCCESS;
+        goto fn_exit;
     }
 
-
-    fcntl_struct = (ADIO_Fcntl_t *) ADIOI_Malloc(sizeof(ADIO_Fcntl_t));
+    fcntl_struct = (ADIO_Fcntl_t *)ADIOI_Malloc(sizeof(ADIO_Fcntl_t));
     fcntl_struct->atomicity = flag;
     ADIO_Fcntl(adio_fh, ADIO_FCNTL_SET_ATOMICITY, fcntl_struct, &error_code);
     /* TODO: what do we do with this error code? */
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(adio_fh, error_code);
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
     ADIOI_Free(fcntl_struct);

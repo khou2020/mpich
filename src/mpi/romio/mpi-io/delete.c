@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_delete as PMPI_File_delete
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_delete(const char *filename, MPI_Info info) __attribute__((weak,alias("PMPI_File_delete")));
+int MPI_File_delete(const char *filename, MPI_Info info) __attribute__((weak, alias("PMPI_File_delete")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -36,14 +36,14 @@ Input Parameters:
 @*/
 int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 {
-    int error_code=MPI_SUCCESS, file_system;
+    int error_code = MPI_SUCCESS, file_system;
     char *tmp;
     ADIOI_Fns *fsops;
 #ifdef MPI_hpux
     int fl_xmpi;
-  
+
     HPMP_IO_START(fl_xmpi, BLKMPIFILEDELETE, TRDTBLOCK,
-                MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
+                  MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */
 
     MPL_UNREFERENCED_ARG(info);
@@ -51,22 +51,23 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     ROMIO_THREAD_CS_ENTER();
 
     MPIR_MPIOInit(&error_code);
-    if (error_code != MPI_SUCCESS) goto fn_exit;
+    if (error_code != MPI_SUCCESS)
+        goto fn_exit;
 
     /* resolve file system type from file name; this is a collective call */
-    ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops, 
-                        &error_code);
+    ADIO_ResolveFileType(MPI_COMM_SELF, filename, &file_system, &fsops,
+                         &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
     {
-	/* ADIO_ResolveFileType() will print as informative a message as it
+        /* ADIO_ResolveFileType() will print as informative a message as it
 	 * possibly can or call MPIR_Err_setmsg.  We just need to propagate 
 	 * the error up.  In the PRINT_ERR_MSG case MPI_Abort has already
 	 * been called as well, so we probably didn't even make it this far.
 	 */
-	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	goto fn_exit;
+        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
@@ -76,7 +77,7 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
      */
     tmp = strchr(filename, ':');
     if (tmp > filename + 1)
-	filename = tmp + 1;
+        filename = tmp + 1;
 
     /* TODO: if doing layering -> interfere here 
      * (see MPI_Open for example) */
@@ -85,9 +86,9 @@ int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
     (fsops->ADIOI_xxx_Delete)(filename, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
-	error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-    /* --END ERROR HANDLING-- */
-	
+        error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+        /* --END ERROR HANDLING-- */
+
 #ifdef MPI_hpux
     HPMP_IO_END(fl_xmpi, MPI_FILE_NULL, MPI_DATATYPE_NULL, -1);
 #endif /* MPI_hpux */

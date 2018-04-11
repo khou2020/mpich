@@ -18,7 +18,7 @@
 #pragma _CRI duplicate MPI_File_get_errhandler as PMPI_File_get_errhandler
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) __attribute__((weak,alias("PMPI_File_get_errhandler")));
+int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) __attribute__((weak, alias("PMPI_File_get_errhandler")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -39,32 +39,34 @@ Output Parameters:
 @*/
 int MPI_File_get_errhandler(MPI_File mpi_fh, MPI_Errhandler *errhandler)
 {
-    int error_code = MPI_SUCCESS;
-    ADIO_File fh;
-    static char myname[] = "MPI_FILE_GET_ERRHANDLER";
+	int error_code = MPI_SUCCESS;
+	ADIO_File fh;
+	static char myname[] = "MPI_FILE_GET_ERRHANDLER";
 
-    ROMIO_THREAD_CS_ENTER();
+	ROMIO_THREAD_CS_ENTER();
 
-    if (mpi_fh == MPI_FILE_NULL) {
-	*errhandler = ADIOI_DFLT_ERR_HANDLER;
-    }
-    else {
-	fh = MPIO_File_resolve(mpi_fh);
-	/* --BEGIN ERROR HANDLING-- */
-	if ((fh <= (MPI_File) 0) || ((fh)->cookie != ADIOI_FILE_COOKIE))
+	if (mpi_fh == MPI_FILE_NULL)
 	{
-	    error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					      myname, __LINE__, MPI_ERR_ARG,
-					      "**iobadfh", 0);
-	    error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
-	    goto fn_exit;
+		*errhandler = ADIOI_DFLT_ERR_HANDLER;
 	}
-	/* --END ERROR HANDLING-- */
+	else
+	{
+		fh = MPIO_File_resolve(mpi_fh);
+		/* --BEGIN ERROR HANDLING-- */
+		if ((fh <= (MPI_File)0) || ((fh)->cookie != ADIOI_FILE_COOKIE))
+		{
+			error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+											  myname, __LINE__, MPI_ERR_ARG,
+											  "**iobadfh", 0);
+			error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
+			goto fn_exit;
+		}
+		/* --END ERROR HANDLING-- */
 
-	*errhandler = fh->err_handler;
-    }
+		*errhandler = fh->err_handler;
+	}
 
 fn_exit:
-    ROMIO_THREAD_CS_EXIT();
-    return error_code;
+	ROMIO_THREAD_CS_EXIT();
+	return error_code;
 }

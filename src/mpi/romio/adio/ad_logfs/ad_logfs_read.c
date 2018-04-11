@@ -14,8 +14,7 @@
 /* here offset has been converted from etypes into bytes */
 void ADIOI_LOGFS_ReadContig(ADIO_File fd, void *buf, int count,
                             MPI_Datatype datatype, int file_ptr_type,
-                            ADIO_Offset offset, ADIO_Status * status, int
-                            *error_code)
+                            ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
     int myrank, nprocs, datatype_size;
     int ret;
@@ -33,7 +32,8 @@ void ADIOI_LOGFS_ReadContig(ADIO_File fd, void *buf, int count,
     ret = logfs_readdata(fd, buf, count, datatype, offset, 0, status);
 
     /* update indiv. filepointer (== in bytes) */
-    if (file_ptr_type != ADIO_EXPLICIT_OFFSET) {
+    if (file_ptr_type != ADIO_EXPLICIT_OFFSET)
+    {
         offset = fd->fp_ind;
         fd->fp_ind += datatype_size * count;
         fd->fp_sys_posn = fd->fp_ind;
@@ -44,8 +44,7 @@ void ADIOI_LOGFS_ReadContig(ADIO_File fd, void *buf, int count,
 
 void ADIOI_LOGFS_ReadStrided(ADIO_File fd, void *buf, int count,
                              MPI_Datatype datatype, int file_ptr_type,
-                             ADIO_Offset offset, ADIO_Status * status, int
-                             *error_code)
+                             ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
     int myrank, nprocs;
     int ret;
@@ -55,7 +54,8 @@ void ADIOI_LOGFS_ReadStrided(ADIO_File fd, void *buf, int count,
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
-    if (ADIO_INDIVIDUAL == file_ptr_type) {
+    if (ADIO_INDIVIDUAL == file_ptr_type)
+    {
         offset = fd->fp_ind - fd->disp;
         offset /= fd->etype_size;
     }
@@ -64,7 +64,8 @@ void ADIOI_LOGFS_ReadStrided(ADIO_File fd, void *buf, int count,
     /* Read data non collective */
     ret = logfs_readdata(fd, buf, count, datatype, offset, 0, status);
 
-    if (file_ptr_type == ADIO_INDIVIDUAL) {
+    if (file_ptr_type == ADIO_INDIVIDUAL)
+    {
         int size;
         int datasize;
         MPI_Aint extent;

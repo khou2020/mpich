@@ -17,7 +17,7 @@
 #pragma _CRI duplicate MPI_File_get_amode as PMPI_File_get_amode
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_get_amode(MPI_File fh, int *amode) __attribute__((weak,alias("PMPI_File_get_amode")));
+int MPI_File_get_amode(MPI_File fh, int *amode) __attribute__((weak, alias("PMPI_File_get_amode")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -38,10 +38,10 @@ Output Parameters:
 @*/
 int MPI_File_get_amode(MPI_File fh, int *amode)
 {
-    int error_code=MPI_SUCCESS;
+    int error_code = MPI_SUCCESS;
     static char myname[] = "MPI_FILE_GET_AMODE";
     ADIO_File adio_fh;
-    
+
     adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */

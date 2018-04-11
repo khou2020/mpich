@@ -10,7 +10,7 @@
 #include "adioi.h"
 #include "layered.h"
 
-void ADIOI_LOGFS_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset * shared_fp, int *error_code)
+void ADIOI_LOGFS_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code)
 {
     void *handle;
 

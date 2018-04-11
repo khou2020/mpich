@@ -22,7 +22,7 @@
 #define FCNAME MPL_QUOTE(FUNCNAME)
 
 /* split communicator based on access to directory 'dirname'. */
-int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm)
+int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm *newcomm)
 {
 
     int i, mpi_errno = MPI_SUCCESS;
@@ -66,8 +66,10 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 
     mpi_errno = MPI_Gather(&id, 1, MPI_INT32_T, all_ids, 1, MPI_INT32_T, 0, comm);
 
-    if (rank == 0) {
-        for (i = 0; i < nprocs; i++) {
+    if (rank == 0)
+    {
+        for (i = 0; i < nprocs; i++)
+        {
             if (all_ids[i] != id)
                 break;
         }
@@ -104,13 +106,14 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 
     filename = MPL_calloc(PATH_MAX, sizeof(char));
 
-    if (rank == 0) {
+    if (rank == 0)
+    {
         int r, pid;
 
         /* same algorithim as shared file pointer name */
         srand(time(NULL) & 0xffffffff);
         r = rand();
-        pid = (int) getpid();
+        pid = (int)getpid();
 
         MPL_snprintf(filename, PATH_MAX, "%s/.commonfstest.%d.%d.%d",
                      dirname == NULL ? "." : dirname, rank, r, pid);
@@ -118,11 +121,13 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
 
     MPI_Bcast(filename, PATH_MAX, MPI_BYTE, 0, comm);
 
-    if (rank == challenge_rank) {
+    if (rank == challenge_rank)
+    {
         MPI_Irecv(NULL, 0, MPI_BYTE, 0, 0, comm, &check_req);
     }
 
-    if (rank == 0) {
+    if (rank == 0)
+    {
         MPI_File fh;
         mpi_errno = MPI_File_open(MPI_COMM_SELF, filename,
                                   MPI_MODE_CREATE | MPI_MODE_EXCL | MPI_MODE_WRONLY,
@@ -135,7 +140,8 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
         MPI_Send(NULL, 0, MPI_BYTE, challenge_rank, 0, comm);
     }
 
-    if (rank == challenge_rank) {
+    if (rank == challenge_rank)
+    {
         MPI_File fh;
 
         MPI_Wait(&check_req, MPI_STATUS_IGNORE);
@@ -144,15 +150,18 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
          * open/close the file instead */
 
         mpi_errno = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
-        if (mpi_errno == MPI_SUCCESS) {
+        if (mpi_errno == MPI_SUCCESS)
+        {
             globally_visible = 1;
-	    MPI_File_close(&fh);
-	} else {
-	    /* do not report error up to caller.  we are merely testing the
+            MPI_File_close(&fh);
+        }
+        else
+        {
+            /* do not report error up to caller.  we are merely testing the
 	     * presence of the file */
-	    mpi_errno = MPI_SUCCESS;
-	    globally_visible = 0;
-	}
+            mpi_errno = MPI_SUCCESS;
+            globally_visible = 0;
+        }
     }
     MPI_Bcast(&globally_visible, 1, MPI_INT, challenge_rank, comm);
 
@@ -163,16 +172,18 @@ int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_
      *   -- or a process not in the group cannot access it (globally
      *      accessable parallel file system) */
 
-    if (globally_visible) {
+    if (globally_visible)
+    {
         MPI_Comm_dup(comm, newcomm);
     }
-    else {
+    else
+    {
         MPI_Comm_split(comm, id, key, newcomm);
     }
     if (rank == 0)
         MPI_File_delete(filename, MPI_INFO_NULL);
 
-  fn_exit:
+fn_exit:
     MPL_free(all_ids);
     MPL_free(filename);
     return mpi_errno;

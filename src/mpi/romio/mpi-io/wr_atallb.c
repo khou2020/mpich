@@ -18,7 +18,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf, int count,
-                                MPI_Datatype datatype) __attribute__((weak,alias("PMPI_File_write_at_all_begin")));
+                                MPI_Datatype datatype) __attribute__((weak, alias("PMPI_File_write_at_all_begin")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -40,14 +40,14 @@ Input Parameters:
 .N fortran
 @*/
 int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
-				int count, MPI_Datatype datatype)
+                                int count, MPI_Datatype datatype)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT_ALL_BEGIN";
 
     error_code = MPIOI_File_write_all_begin(fh, offset,
-					    ADIO_EXPLICIT_OFFSET,
-					    buf, count, datatype, myname);
+                                            ADIO_EXPLICIT_OFFSET,
+                                            buf, count, datatype, myname);
 
     return error_code;
 }

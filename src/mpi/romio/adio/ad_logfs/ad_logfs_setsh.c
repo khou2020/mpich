@@ -17,7 +17,6 @@ void ADIOI_LOGFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code
 
     *error_code = MPI_SUCCESS;
 
-
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
     FPRINTF(stdout, "[%d/%d] ADIOI_LOGFS_Set_shared_fp called on %s\n",
@@ -29,5 +28,4 @@ void ADIOI_LOGFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code
     handle = ADIOI_Layer_switch_in(fd);
     ADIO_Set_shared_fp(fd, offset, error_code);
     ADIOI_Layer_switch_out(fd, handle);
-
 }

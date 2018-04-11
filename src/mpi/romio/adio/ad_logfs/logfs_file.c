@@ -11,7 +11,7 @@
 /*
  * The displacement and datatype follow the record header
  */
-#define LOGFS_FILE_RECORD_VIEW   1
+#define LOGFS_FILE_RECORD_VIEW 1
 
 /*
  * After this header kind:
@@ -21,12 +21,12 @@
  *   The datasize (in bytes) followed by the
  * actual data
  */
-#define LOGFS_FILE_RECORD_DATA   2
+#define LOGFS_FILE_RECORD_DATA 2
 
 /*
  * Followed by the epoch number
  */
-#define LOGFS_FILE_RECORD_SYNC  3
+#define LOGFS_FILE_RECORD_SYNC 3
 
 /*
  * followed by filesize (MPI_Offset)
@@ -38,11 +38,11 @@
 /* #define LOGFS_FILE_RECORDMAGIC */
 
 #define LOGFS_FILE_RECORDMAGIC_START "[magicstart]    "
-#define LOGFS_FILE_RECORDMAGIC_STOP  "[magicstop ]    "
-
+#define LOGFS_FILE_RECORDMAGIC_STOP "[magicstop ]    "
 
 /* Record struct for in the logfs metalog */
-typedef struct {
+typedef struct
+{
 #ifdef LOGFS_FILE_RECORDMAGIC
     char magic_start[16];
 #endif
@@ -53,22 +53,21 @@ typedef struct {
 #endif
 } logfs_file_recordstruct;
 
-
 /* Header that goes at the beginning of both metadata and datafiles */
-typedef struct {
+typedef struct
+{
     char magic[64];
     /* don't store epoch here; otherwise we need an alreduce when we lazily
      * open the logfile to inform other CPUs of the highest epoch number */
-    /*int epoch;  *//* epoch number of last epoch in file */
+    /*int epoch;  */ /* epoch number of last epoch in file */
 } logfs_file_headerstruct;
-
-
 
 /*
  * Handles all logfs meta- and datafile I/O
  */
-struct logfs_file_instance {
-    MPI_Comm comm;              /* file communicator */
+struct logfs_file_instance
+{
+    MPI_Comm comm; /* file communicator */
 
     /* external functions for writing to a logfile */
     logfs_file_ops ops;
@@ -78,14 +77,14 @@ struct logfs_file_instance {
     logfs_file_readops readops;
     void *readops_data;
 
-    ADIO_Offset datalog_offset; /* offset of next write in datalog */
-    ADIO_Offset metalog_offset; /* offset of next write in metalog */
-    ADIO_Offset dataepoch_start;        /* start offset of epoch in datalog */
-    ADIO_Offset metaepoch_start;        /* start offset of epoch in metalog */
+    ADIO_Offset datalog_offset;  /* offset of next write in datalog */
+    ADIO_Offset metalog_offset;  /* offset of next write in metalog */
+    ADIO_Offset dataepoch_start; /* start offset of epoch in datalog */
+    ADIO_Offset metaepoch_start; /* start offset of epoch in metalog */
     int last_epoch;
 
-    int active;                 /* has there been real data yet */
-    int readactive;             /* if the file is open for reading */
+    int active;     /* has there been real data yet */
+    int readactive; /* if the file is open for reading */
 
     /* do we need to record updates to view/size/epoch before the next data
      * write? */
@@ -122,16 +121,16 @@ static inline int logfs_file_read(logfs_file_handle handle, void *data, int size
 
 static void logfs_file_flush_size(logfs_file_handle handle);
 
-static inline void logfs_file_readdatatype(logfs_file_handle handle, logfs_file_typeinfo * info);
+static inline void logfs_file_readdatatype(logfs_file_handle handle, logfs_file_typeinfo *info);
 
 static inline void logfs_file_readseek(logfs_file_handle handle, ADIO_Offset pos);
 
-static int logfs_file_readheader(logfs_file_handle handle, logfs_file_headerstruct * h);
+static int logfs_file_readheader(logfs_file_handle handle, logfs_file_headerstruct *h);
 
 /***************************************************************************/
 
-logfs_file_handle logfs_file_create(MPI_Comm comm, const logfs_file_ops * ops, void *ops_data,
-                                    const logfs_file_readops * readops, void *readops_data)
+logfs_file_handle logfs_file_create(MPI_Comm comm, const logfs_file_ops *ops, void *ops_data,
+                                    const logfs_file_readops *readops, void *readops_data)
 {
     logfs_file_handle handle = (logfs_file_handle)
         malloc(sizeof(struct logfs_file_instance));
@@ -173,32 +172,32 @@ logfs_file_handle logfs_file_create(MPI_Comm comm, const logfs_file_ops * ops, v
     return handle;
 }
 
-
-void logfs_file_free(logfs_file_handle * handle)
+void logfs_file_free(logfs_file_handle *handle)
 {
     /* flush setsize if needed */
     if ((*handle)->dirty_size)
         logfs_file_flush_size(*handle);
 
-    if ((*handle)->readactive) {
+    if ((*handle)->readactive)
+    {
         (*handle)->readops.done((*handle)->readops_data);
     }
 
-    if ((*handle)->active) {
+    if ((*handle)->active)
+    {
         (*handle)->ops.done((*handle)->ops_data);
     }
 
-   if ((*handle)->etype != MPI_DATATYPE_NULL)
-    MPI_Type_free(&(*handle)->etype);
+    if ((*handle)->etype != MPI_DATATYPE_NULL)
+        MPI_Type_free(&(*handle)->etype);
 
-   if ((*handle)->filetype != MPI_DATATYPE_NULL)
-    MPI_Type_free(&(*handle)->filetype);
+    if ((*handle)->filetype != MPI_DATATYPE_NULL)
+        MPI_Type_free(&(*handle)->filetype);
 
     MPI_Comm_free(&(*handle)->comm);
 
     free(*handle);
     *handle = 0;
-
 }
 
 static inline void logfs_file_openlogs(logfs_file_handle handle)
@@ -217,12 +216,14 @@ static inline void logfs_file_openlogs(logfs_file_handle handle)
 
     /* try to read header */
     logfs_file_readseek(handle, 0);
-    if (logfs_file_readheader(handle, &h)) {
+    if (logfs_file_readheader(handle, &h))
+    {
         /* read header was ok; move to end of logfile and metafile */
         handle->ops.getsize(handle->ops_data, &handle->datalog_offset, LOGFS_FILE_LOG_DATA);
         handle->ops.getsize(handle->ops_data, &handle->metalog_offset, LOGFS_FILE_LOG_META);
     }
-    else {
+    else
+    {
         /* couldn't read header: trunc file */
         /* reset filesize and write new header */
         handle->ops.restart(handle->ops_data, 0, LOGFS_FILE_LOG_META);
@@ -240,7 +241,10 @@ static inline void logfs_file_write(logfs_file_handle handle, const void *data, 
 
     handle->ops.write(handle->ops_data,
                       (log ==
-                       LOGFS_FILE_LOG_DATA ? handle->datalog_offset : handle->metalog_offset), data,
+                               LOGFS_FILE_LOG_DATA
+                           ? handle->datalog_offset
+                           : handle->metalog_offset),
+                      data,
                       size, log);
 
     /* keep track of offset in data log file */
@@ -251,28 +255,26 @@ static inline void logfs_file_write(logfs_file_handle handle, const void *data, 
 }
 
 /* read flatlist view of datatype */
-static inline void logfs_file_readdatatype(logfs_file_handle handle, logfs_file_typeinfo * info)
+static inline void logfs_file_readdatatype(logfs_file_handle handle, logfs_file_typeinfo *info)
 {
     logfs_file_read(handle, &info->count, sizeof(info->count));
 
-   info->indices = ADIOI_Malloc (sizeof(*(info->indices))*info->count); 
-   info->blocklens = ADIOI_Malloc (sizeof(*(info->blocklens))*info->count); 
+    info->indices = ADIOI_Malloc(sizeof(*(info->indices)) * info->count);
+    info->blocklens = ADIOI_Malloc(sizeof(*(info->blocklens)) * info->count);
 
-   logfs_file_read (handle, info->indices, sizeof(*(info->indices))*info->count) ; 
-   logfs_file_read (handle, info->blocklens, sizeof(*(info->blocklens))*info->count); 
+    logfs_file_read(handle, info->indices, sizeof(*(info->indices)) * info->count);
+    logfs_file_read(handle, info->blocklens, sizeof(*(info->blocklens)) * info->count);
 }
 
 static void logfs_file_writedatatype(logfs_file_handle handle, MPI_Datatype type)
 {
     ADIOI_Flatlist_node *flat_buf;
 
-
-   /* flattened code will store flattened representation as an attribute on
+    /* flattened code will store flattened representation as an attribute on
     * both built-in contiguous types and user-derrived types */
     flat_buf = ADIOI_Flatten_and_find(type);
 
     assert(flat_buf);
-
 
     /* write flattened version for now */
     /* write count, indices, blocklens */
@@ -283,10 +285,9 @@ static void logfs_file_writedatatype(logfs_file_handle handle, MPI_Datatype type
                      sizeof(flat_buf->blocklens[0]) * flat_buf->count, LOGFS_FILE_LOG_META);
 }
 
-static int logfs_file_readheader(logfs_file_handle handle, logfs_file_headerstruct * h)
+static int logfs_file_readheader(logfs_file_handle handle, logfs_file_headerstruct *h)
 {
-    return (logfs_file_read(handle, h, sizeof(logfs_file_headerstruct))
-            == sizeof(logfs_file_headerstruct));
+    return (logfs_file_read(handle, h, sizeof(logfs_file_headerstruct)) == sizeof(logfs_file_headerstruct));
 }
 
 static void logfs_file_writeheader(logfs_file_handle handle)
@@ -319,7 +320,6 @@ static void logfs_file_flush_size(logfs_file_handle handle)
     handle->dirty_size = 0;
 }
 
-
 static void logfs_file_flush_sync(logfs_file_handle handle)
 {
     /* record start of new epoch in metalog & datalog */
@@ -341,8 +341,6 @@ static void logfs_file_flush_view(logfs_file_handle handle)
     logfs_file_writedatatype(handle, handle->filetype);
     handle->dirty_view = 0;
 }
-
-
 
 void logfs_file_record_sync(logfs_file_handle handle)
 {
@@ -405,15 +403,13 @@ void logfs_file_record_sync(logfs_file_handle handle)
 
     ++handle->epoch;
     handle->dirty_sync = 1;
-
-
 }
-
 
 void logfs_file_record_setsize(logfs_file_handle handle, MPI_Offset size)
 {
     handle->filesize = size;
-    if (!size) {
+    if (!size)
+    {
         /* TODO do something special and erase the log */
         /* or even better: handle this on a higher level;
          * this has nothing to do with the logfs_file as such*/
@@ -421,7 +417,6 @@ void logfs_file_record_setsize(logfs_file_handle handle, MPI_Offset size)
     }
 
     handle->dirty_size = 1;
-
 }
 
 void logfs_file_record_view(logfs_file_handle handle, MPI_Datatype etype,
@@ -439,13 +434,11 @@ void logfs_file_record_view(logfs_file_handle handle, MPI_Datatype etype,
 
     /* lazy writing of file view */
     handle->dirty_view = 1;
-
 }
 
-
 MPI_Offset logfs_file_record_write(logfs_file_handle handle,
-	const void * buf, int count,
-      MPI_Datatype memtype, MPI_Offset offset)
+                                   const void *buf, int count,
+                                   MPI_Datatype memtype, MPI_Offset offset)
 {
     int size;
     ADIO_Offset dataoffset;
@@ -487,7 +480,7 @@ MPI_Offset logfs_file_record_write(logfs_file_handle handle,
  * the type was already stored anyway*/
 int logfs_file_acceptmemdata(void *membuf, int size, ADIO_Offset fileoffset, void *data)
 {
-    logfs_file_handle handle = (logfs_file_handle) data;
+    logfs_file_handle handle = (logfs_file_handle)data;
 
     logfs_file_write(handle, membuf, size, LOGFS_FILE_LOG_DATA);
 
@@ -506,7 +499,8 @@ void logfs_file_clear(logfs_file_handle handle, int last)
     if (!handle->active)
         return;
 
-    if (last) {
+    if (last)
+    {
         /* if the last recorded epoch change is not equal to the current epoch,
          * there hasn't been a meaningful write operation in the current epoch
          * (otherwise the new epoch would have been recorded in the log)
@@ -562,7 +556,8 @@ static inline void logfs_file_readseek(logfs_file_handle handle, ADIO_Offset pos
 static inline int logfs_file_read(logfs_file_handle handle, void *data, int size)
 {
     int read;
-    if (!handle->readactive) {
+    if (!handle->readactive)
+    {
         handle->readactive = 1;
         handle->readops.init(handle->readops_data);
     }
@@ -574,20 +569,18 @@ static inline int logfs_file_read(logfs_file_handle handle, void *data, int size
 }
 
 /* try to read a record; return 1 if OK, 0 if EOF */
-static inline int logfs_file_readrecord(logfs_file_handle handle, logfs_file_recordstruct * header)
+static inline int logfs_file_readrecord(logfs_file_handle handle, logfs_file_recordstruct *header)
 {
     int read = logfs_file_read(handle, header, sizeof(logfs_file_recordstruct));
 
-
-
 #ifdef LOGFS_FILE_RECORDMAGIC
     /* If we could read something, it should be a valid header */
-    if (read == sizeof(logfs_file_recordstruct)) {
+    if (read == sizeof(logfs_file_recordstruct))
+    {
         assert(!strncmp(header->magic_start, LOGFS_FILE_RECORDMAGIC_START,
                         sizeof(header->magic_start)));
         assert(!strncmp(header->magic_stop, LOGFS_FILE_RECORDMAGIC_STOP,
                         sizeof(header->magic_stop)));
-
     }
 #endif
 
@@ -597,13 +590,11 @@ static inline int logfs_file_readrecord(logfs_file_handle handle, logfs_file_rec
     return read;
 }
 
-
 /* ======================================================================== */
 /* ======================================================================== */
 /* ======================================================================== */
-static inline
-    int logfs_file_replay_processview(logfs_file_handle handle,
-                                      const logfs_file_replayops * ops, void *opsdata)
+static inline int logfs_file_replay_processview(logfs_file_handle handle,
+                                                const logfs_file_replayops *ops, void *opsdata)
 {
     ADIO_Offset displacement;
 
@@ -619,9 +610,8 @@ static inline
     return ops->set_view(opsdata, displacement, etype, ftype, "native");
 }
 
-static inline
-    int logfs_file_replay_processdata(logfs_file_handle handle,
-                                      const logfs_file_replayops * ops, void *opsdata)
+static inline int logfs_file_replay_processdata(logfs_file_handle handle,
+                                                const logfs_file_replayops *ops, void *opsdata)
 {
     int size;
     ADIO_Offset datalogofs, fileofs;
@@ -632,9 +622,8 @@ static inline
     return ops->write(opsdata, fileofs, size, datalogofs);
 }
 
-static inline
-    int logfs_file_replay_processsync(logfs_file_handle handle,
-                                      const logfs_file_replayops * ops, void *opsdata)
+static inline int logfs_file_replay_processsync(logfs_file_handle handle,
+                                                const logfs_file_replayops *ops, void *opsdata)
 {
     int epoch;
 
@@ -642,21 +631,19 @@ static inline
     return ops->start_epoch(opsdata, epoch);
 }
 
-static inline
-    int logfs_file_replay_processsize(logfs_file_handle handle,
-                                      const logfs_file_replayops * ops, void *opsdata)
+static inline int logfs_file_replay_processsize(logfs_file_handle handle,
+                                                const logfs_file_replayops *ops, void *opsdata)
 {
     ADIO_Offset ofs;
     logfs_file_read(handle, &ofs, sizeof(ofs));
     return ops->set_size(opsdata, ofs);
 }
 
-
 int logfs_file_replay(logfs_file_handle handle, int last,
-                      const logfs_file_replayops * ops, void *opsdata)
+                      const logfs_file_replayops *ops, void *opsdata)
 {
     /* offset in metalog where we start replaying */
-    int active = 0;             /* did we find something meaningful? */
+    int active = 0; /* did we find something meaningful? */
     int cont = 1;
     logfs_file_recordstruct record;
 
@@ -665,7 +652,8 @@ int logfs_file_replay(logfs_file_handle handle, int last,
     if (!active && last)
         return 1;
 
-    if (last) {
+    if (last)
+    {
         /* if the last recorded epoch change is not equal to the current epoch,
          * there hasn't been a meaningful write operation in the current epoch
          * (otherwise the new epoch would have been recorded in the log)
@@ -675,7 +663,8 @@ int logfs_file_replay(logfs_file_handle handle, int last,
 
         logfs_file_readseek(handle, handle->metaepoch_start);
     }
-    else {
+    else
+    {
         logfs_file_headerstruct h;
         logfs_file_readseek(handle, 0);
         /* read header; increments replaypos */
@@ -685,7 +674,8 @@ int logfs_file_replay(logfs_file_handle handle, int last,
     /* loop over records
      *  -> read record; find out type; read rest; call callback */
 
-    while (cont) {
+    while (cont)
+    {
         /* read record; if EOF break */
         int ok = logfs_file_readrecord(handle, &record);
 
@@ -693,13 +683,15 @@ int logfs_file_replay(logfs_file_handle handle, int last,
             break;
 
         /* we found something, so make sure the callbacks are ready */
-        if (!active) {
+        if (!active)
+        {
             active = 1;
             ops->init(opsdata);
         }
 
         /* process record; read aditional data */
-        switch (record.recordtype) {
+        switch (record.recordtype)
+        {
         case LOGFS_FILE_RECORD_VIEW:
             cont = logfs_file_replay_processview(handle, ops, opsdata);
             break;
