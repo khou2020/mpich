@@ -113,13 +113,18 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
 #ifdef MPI_hpux
     int fl_xmpi;
-
+    HPMP_IO_OPEN_START(fl_xmpi, comm);
     HPMP_IO_OPEN_START(fl_xmpi, comm);
 #endif /* MPI_hpux */
+    
+    {
+        MPI_Comm_rank(comm, &rank);
+        if(rank == 0){
+            printf("LogFS_in_ROMIO: %s\n", filename);
+        }
+    }
 
     ROMIO_THREAD_CS_ENTER();
-
-printf("wkliao -- debug mark in ROMIO at line %d of file %s (remove for production build)\n",__LINE__,__FILE__);fflush(stdout);
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_COMM(comm, myname, error_code);

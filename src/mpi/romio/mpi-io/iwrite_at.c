@@ -61,6 +61,14 @@ int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
 		  fh, datatype, count);
 #endif /* MPI_hpux */
 
+    /*
+    {
+        int i, rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        printf("Rank: %d, MPI_File_iwrite_at(%s, offset=%llu, buf=%llx, count=%d)\n", rank, fh->filename, offset, buf, count);
+        fflush(stdout);
+    }
+    */
 
     adio_fh = MPIO_File_resolve(fh);
 

@@ -11,6 +11,16 @@ void ADIOI_UFS_Open(ADIO_File fd, int *error_code)
 {
     int perm, old_mask, amode;
     static char myname[] = "ADIOI_UFS_OPEN";
+    
+    {
+        int myrank;
+
+        MPI_Comm_rank(fd->comm, &myrank);
+
+        if(myrank == 0){
+            printf("ADIOI_UFS_Open: %s\n", fd->filename);
+        }
+    }
 
     if (fd->perm == ADIO_PERM_NULL) {
 	old_mask = umask(022);

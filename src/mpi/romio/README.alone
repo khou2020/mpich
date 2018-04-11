@@ -43,8 +43,17 @@ To build ROMIO stand-alone version on Cori:
       //MPL_backtrace_show(stderr);
    3. Comment line 82 of mpi-io/glue/mpich/mpio_err.c out
       //MPIR_Abort(fh->comm, MPI_SUCCESS, error_code, error_msg);
-   
-7. build recipe on cori:
+
+7. Competibility issue in adio must be fixed
+   In adio/ad_lustre/ad_lustre_rwcontig.c line 143
+   Function ADIOI_LUSTRE_IOContig does not support calling with 0 count that is used by logfs
+
+   Modify
+   ssize_t err=-1;
+   to
+   ssize_t err=-2;
+
+8. build recipe on cori:
    ../romio-robl/configure --prefix=$HOME/LOGFS \
                            --with-file-system=ufs+lustre \
                            --with-mpi-impl=MPICH \
@@ -53,17 +62,17 @@ To build ROMIO stand-alone version on Cori:
                            --disable-f77 \
                            --disable-f90
 
-8. To compile your application programs, Darshan module must be unloaded.
+9. To compile your application programs, Darshan module must be unloaded.
    Run command "module unload darshan".
 
-9. Run your compile command:
+10. Run your compile command:
    % cc -g mpi_file_info.c -o mpi_file_info -I$HOME/LOGFS/include $HOME/LOGFS/lib/libromio.a
 
    Below does not work !!!
    % cc -g mpi_file_info.c -o mpi_file_info -I$HOME/LOGFS/include -L$HOME/LOGFS/lib -lromio
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-10. Build PnetCDF with this ROMIO library on Cori by adding options LDFLAGS and
+11. Build PnetCDF with this ROMIO library on Cori by adding options LDFLAGS and
     LIBS:
 
     ../trunk/configure --prefix=$HOME/PnetCDF \
