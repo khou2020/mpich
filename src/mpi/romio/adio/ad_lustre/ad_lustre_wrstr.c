@@ -182,13 +182,6 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
     int stripe_size;
     static char myname[] = "ADIOI_LUSTRE_WriteStrided";
 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank == 31){
-        printf("Rank: %d, ADIOI_LUSTRE_WriteStrided(fd=%s, count=%d, offset=%lld)\n", rank, fd->filename, count, offset);
-        fflush(stdout);
-    }
-
     if (fd->hints->ds_write == ADIOI_HINT_DISABLE)
     {
         /* if user has disabled data sieving on writes, use naive
@@ -417,11 +410,6 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
             fwr_size = MPL_MIN(flat_file->blocklens[j], bufsize - i_offset);
         }
 
-        if (rank == 31){
-            printf("Rank: %d, \tBufferContig_FileNotContig(end_offset = %lld)\n", rank, end_offset);
-            fflush(stdout);
-        }
-
         /* if atomicity is true, lock the region to be accessed */
         if (fd->atomicity)
             ADIOI_WRITE_LOCK(fd, start_off, SEEK_SET, end_offset - start_off + 1);
@@ -456,10 +444,6 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                     userbuf_off = i_offset;
                     //ADIOI_BUFFERED_WRITE
                     {
-                        if (rank == 31){
-                            printf("Rank: %d, \t\tADIOI_BUFFERED_WRITE(ioffset=%lld, fwr_size=%lld, end_offset = %lld, req_off=%lld, writebuf_off=%lld, writebuf_len=%lld)\n", rank, i_offset, fwr_size, end_offset, req_off, writebuf_off, writebuf_len);
-                            fflush(stdout);
-                        }
                         if (req_off >= writebuf_off + writebuf_len)
                         {
                             if (writebuf_len)
@@ -506,18 +490,18 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                                                       writebuf_off + writebuf_len - req_off));
                         ADIOI_Assert((ADIO_Offset)write_sz ==
                                      MPL_MIN(req_len, writebuf_off + writebuf_len - req_off));
-                        if (rank == 31)
                         {
-                            printf("Rank: %d, \t\t\tmemcpy(%llxx + %llu, %llx + %llu, %llu)", rank, writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz);
-                            fflush(stdout);
+                            int i, rank;
+                            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+                            if (rank == 32)
+                            {
+                                printf("Rank: %d, memcpy(%llxx + %llu, %llx + %llu, %llu)", writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz);
+                                fflush(stdout);
+                            }
                         }
                         memcpy(writebuf + req_off - writebuf_off, (char *)buf + userbuf_off, write_sz);
                         while (write_sz != req_len)
                         {
-                            if (rank == 31){
-                                printf("Rank: %d, \t\t\tADIO_WriteContig(writebuf_len=%lld, writebuf_off=%lld), write_sz=%lld, req_len=%lld\n", rank, writebuf_len, writebuf_off, write_sz, req_len);
-                                fflush(stdout);
-                            }
                             ADIO_WriteContig(fd, writebuf, writebuf_len, MPI_BYTE,
                                              ADIO_EXPLICIT_OFFSET, writebuf_off, &status1, error_code);
                             if (!(fd->atomicity))
