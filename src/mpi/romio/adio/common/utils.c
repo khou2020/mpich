@@ -86,7 +86,8 @@ int ADIOI_Type_create_hindexed_x(int count,
 	} else {
 	    /* OK to cast: checked for "bigness" above */
 	    blocklens[i] = (int)array_of_blocklengths[i];
-	    MPI_Type_contiguous(blocklens[i], oldtype, &(types[i]));
+	    //MPI_Type_contiguous(blocklens[i], oldtype, &(types[i]));
+        types[i] = oldtype; 
 	}
     }
 
@@ -98,7 +99,9 @@ int ADIOI_Type_create_hindexed_x(int count,
 		array_of_displacements, oldtype, newtype);
     }
     for (i=0; i< count; i++)
-	MPI_Type_free(&(types[i]));
+        if (types[i] != oldtype) 
+            MPI_Type_free(&(types[i])); 
+	//MPI_Type_free(&(types[i]));
     ADIOI_Free(types);
     ADIOI_Free(blocklens);
 
