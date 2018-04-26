@@ -495,7 +495,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                             if (rank == 32)
                             {
-                                printf("Rank: %d, memcpy(%llxx + %llu, %llx + %llu, %llu)", writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz);
+                                printf("Rank: %d, memcpy(%llx + %llu, %llx + %llu, %llu)", rank, writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz);
                                 fflush(stdout);
                             }
                         }

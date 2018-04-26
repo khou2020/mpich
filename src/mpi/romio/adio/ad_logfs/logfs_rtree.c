@@ -117,7 +117,7 @@ static void logfs_rtree_readtypes(logfs_rtree_flush_state *state, MPI_Datatype *
     {
         sortindices[i] = sortindices[i - 1] + blocklens[i - 1];
         sortblocklens[i] = blocklens[i];
-        ADIOI_Assert (sortindices[i] <= INT_MAX);
+        //ADIOI_Assert (sortindices[i] <= INT_MAX);
     }
 
     ADIOI_Type_create_hindexed_x(count, sortblocklens, sortindices, MPI_BYTE, memtype);
@@ -177,7 +177,7 @@ static void logfs_rtree_replay_startwrite(logfs_rtree_flush_state *state)
         for (i = 0; i < segmentcount; ++i)
         {
             //ADIOI_Assert (sizeof(MPI_Aint) == sizeof(int) && (*tmp2) > INT_MAX);
-            ADIOI_Assert ((*tmp2) <= INT_MAX);
+            //ADIOI_Assert ((*tmp2) <= INT_MAX);
             sortblocklens[i] = (MPI_Count)(*tmp1++);
             sortindices[i] = (MPI_Aint)(*tmp2++);
         }
