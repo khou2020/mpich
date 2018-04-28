@@ -30,10 +30,10 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
 	MPI_Comm_rank(fd->comm, &myrank);
 
 	{
-		if (myrank == 0)
-		{
+		//if (myrank == 0)
+		//{
 			//printf("ADIOI_LUSTRE_Open: %s\n", fd->filename);
-		}
+		//}
 	}
 
 	if (fd->perm == ADIO_PERM_NULL)

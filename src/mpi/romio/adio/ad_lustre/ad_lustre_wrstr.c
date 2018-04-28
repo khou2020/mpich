@@ -490,7 +490,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                                                       writebuf_off + writebuf_len - req_off));
                         ADIOI_Assert((ADIO_Offset)write_sz ==
                                      MPL_MIN(req_len, writebuf_off + writebuf_len - req_off));
-                        {
+                        /*{
                             int i, rank;
                             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                             if (rank == 32)
@@ -498,7 +498,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                                 printf("Rank: %d, memcpy(%llx + %llu, %llx + %llu, %llu)", rank, writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz);
                                 fflush(stdout);
                             }
-                        }
+                        }*/
                         memcpy(writebuf + req_off - writebuf_off, (char *)buf + userbuf_off, write_sz);
                         while (write_sz != req_len)
                         {

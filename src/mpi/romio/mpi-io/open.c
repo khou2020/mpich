@@ -116,7 +116,7 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 #endif /* MPI_hpux */
 
     {
-        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         if (rank == 0)
         {
             printf("LogFS_in_ROMIO: %s\n", filename);
