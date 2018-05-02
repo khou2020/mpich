@@ -283,6 +283,20 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
         }
         /* noncontiguous in file */
         flat_file = ADIOI_Flatten_and_find(fd->filetype);
+        {
+			int i, rank;
+			MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+			if (rank == VERBOSE_RANK)
+			{
+                for(i = 1; i < flat_file->count; i++){
+                    if(flat_file->indices[i] < flat_file->indices[i - 1]){
+                        printf("Rank: %d, flat_file->indices[%d]=%llu\n", rank, i, flat_file->indices[i]);
+                        fflush(stdout);
+                        break;
+                    }
+                }
+			}
+		}
         disp = fd->disp;
 
         if (file_ptr_type == ADIO_INDIVIDUAL)
@@ -523,7 +537,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                             MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                             if (rank == VERBOSE_RANK)
                             {
-                                printf("Rank: %d,         memcpy (%llx + %llu, %llx + %llu, %llu; req_len=%llu)\n", rank, writebuf, req_off - writebuf_off, buf, userbuf_off, write_sz, req_len);
+                                printf("Rank: %d,         memcpy (%llx + %llu - %llu, %llx + %llu, %llu; req_len=%llu)\n", rank, writebuf, req_off, writebuf_off, buf, userbuf_off, write_sz, req_len);
                                 fflush(stdout);
                             }
                         }
