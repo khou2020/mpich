@@ -11,6 +11,8 @@
 #ifndef AD_UNIX_INCLUDE
 #define AD_UNIX_INCLUDE
 
+#define VERBOSE_RANK 2
+
 /* temp*/
 #define HAVE_ASM_TYPES_H 1
 
