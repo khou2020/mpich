@@ -594,7 +594,19 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                     }
                 }
                 i_offset += fwr_size;
-
+                {
+                    int i, rank;
+                    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+                    if (rank == VERBOSE_RANK)
+                    {
+                        printf("Rank: %d,         flat_file->indices[49870:49875]=(");
+                        for(i = 49870; i < 49875; i++){
+                            printf("%llu, ", flat_file->indices[i]);
+                        }
+                        printf(")\n");
+                        fflush(stdout);
+                    }
+                }
                 if (off + fwr_size < disp + flat_file->indices[j] +
                                          flat_file->blocklens[j] +
                                          n_filetypes * (ADIO_Offset)filetype_extent)
