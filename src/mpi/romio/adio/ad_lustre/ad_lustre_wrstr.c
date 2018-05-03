@@ -286,16 +286,13 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
         {
 			int i, rank;
 			MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-			if (rank == VERBOSE_RANK)
-			{
-                for(i = 10; i < flat_file->count; i++){
-                    if(flat_file->indices[i] < flat_file->indices[i - 1]){
-                        printf("Rank: %d, flat_file->indices[%d]=%llu\n", rank, i, flat_file->indices[i]);
-                        fflush(stdout);
-                        break;
-                    }
+            for(i = 10; i < flat_file->count; i++){
+                if(flat_file->indices[i] < flat_file->indices[i - 1]){
+                    printf("Rank: %d, flat_file->indices[%d]=%llu\n", rank, i, flat_file->indices[i]);
+                    fflush(stdout);
+                    break;
                 }
-			}
+            }
 		}
         disp = fd->disp;
 
