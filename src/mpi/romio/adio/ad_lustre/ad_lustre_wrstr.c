@@ -599,7 +599,7 @@ void ADIOI_LUSTRE_WriteStrided(ADIO_File fd, const void *buf, int count,
                     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                     if (rank == VERBOSE_RANK)
                     {
-                        printf("Rank: %d,         flat_file->indices[49870:49875]=(");
+                        printf("Rank: %d,         flat_file->indices[49870:49875]=(", rank);
                         for(i = 49870; i < 49875; i++){
                             printf("%llu, ", flat_file->indices[i]);
                         }
