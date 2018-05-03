@@ -179,7 +179,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     /* scalable open: one process opens and broadcasts results to everyone */
 
     ADIOI_OpenColl(fd, rank, access_mode, error_code);
-
+    fd->orig_access_mode = access_mode;
     /* for debugging, it can be helpful to see the hints selected. Some file
      * systes set up the hints in the open call (e.g. lustre) */
     p = getenv("ROMIO_PRINT_HINTS");

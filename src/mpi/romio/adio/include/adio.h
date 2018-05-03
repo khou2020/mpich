@@ -203,6 +203,7 @@ typedef struct ADIOI_FileD {
     char *filename;          
     int file_system;         /* type of file system */
     int access_mode;         /* Access mode (sequential, append, etc.) */
+    int orig_access_mode;       /* Access mode provided by user: unmodified */
     ADIO_Offset disp;        /* reqd. for MPI-IO */
     MPI_Datatype etype;      /* reqd. for MPI-IO */
     MPI_Datatype filetype;   /* reqd. for MPI-IO */
