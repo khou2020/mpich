@@ -182,6 +182,7 @@ static void logfs_rtree_replay_startwrite(logfs_rtree_flush_state *state)
             sortindices[i] = (MPI_Aint)(*tmp2++);
         }
 
+        myqsort(sortindices, sortblocklens, 0, segmentcount - 1);
         ADIOI_Type_create_hindexed_x(segmentcount, sortblocklens, sortindices, MPI_BYTE, &writefiletype);
         MPI_Type_commit(&writefiletype);
     }
