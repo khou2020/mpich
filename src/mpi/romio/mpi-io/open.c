@@ -288,6 +288,10 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
         }
     }
 
+    if (rank == 0){
+        printf("Using Log FS in ROMIO\n");
+    }
+
 #ifdef MPI_hpux
     HPMP_IO_OPEN_END(fl_xmpi, *fh, comm);
 #endif /* MPI_hpux */
