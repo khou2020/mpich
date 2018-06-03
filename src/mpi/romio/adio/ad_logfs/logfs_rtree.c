@@ -176,11 +176,6 @@ static void logfs_rtree_replay_startwrite(logfs_rtree_flush_state *state)
         tmp2 = (ADIO_Offset *)growvector_get_null(state->realpos);
         for (i = 0; i < segmentcount; ++i)
         {
-<<<<<<< HEAD
-            //ADIOI_Assert (sizeof(MPI_Aint) == sizeof(int) && (*tmp2) > INT_MAX);
-            //ADIOI_Assert ((*tmp2) <= INT_MAX);
-=======
->>>>>>> logfs-in-romio
             sortblocklens[i] = (MPI_Count)(*tmp1++);
             sortindices[i] = (MPI_Aint)(*tmp2++);
         }
