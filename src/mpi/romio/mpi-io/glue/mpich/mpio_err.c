@@ -6,7 +6,7 @@
 
 #include "mpioimpl.h"
 #include "adio_extern.h"
-#include "mpir_ext.h"
+//#include "mpir_ext.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -76,7 +76,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
         MPL_snprintf(error_msg, 4096, "I/O error: ");
         len = (int) strlen(error_msg);
         MPIR_Err_get_string(error_code, &error_msg[len], 4096 - len, NULL);
-        MPIR_Abort(fh->comm, MPI_SUCCESS, error_code, error_msg);
+        //MPIR_Abort(fh->comm, MPI_SUCCESS, error_code, error_msg);
     }
     /* --END ERROR HANDLING-- */
     else if (kind == 2) {
