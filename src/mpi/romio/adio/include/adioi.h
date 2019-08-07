@@ -777,7 +777,7 @@ int MPIOI_File_write_all_begin(MPI_File fh,
                                const void *buf, int count, MPI_Datatype datatype, char *myname);
 int MPIOI_File_read_all_end(MPI_File fh, void *buf, char *myname, MPI_Status * status);
 int MPIOI_File_write_all_end(MPI_File fh, const void *buf, char *myname, MPI_Status * status);
-int MPIOI_File_iwrite(MPI_File fh,
+int MPIOI_File_iwrite(ADIO_File adio_fh,
                       MPI_Offset offset,
                       int file_ptr_type,
                       const void *buf,
@@ -787,7 +787,7 @@ int MPIOI_File_iread(MPI_File fh,
                      int file_ptr_type,
                      void *buf,
                      int count, MPI_Datatype datatype, char *myname, MPI_Request * request);
-int MPIOI_File_iwrite_all(MPI_File fh,
+int MPIOI_File_iwrite_all(ADIO_File adio_fh,
                           MPI_Offset offset,
                           int file_ptr_type,
                           const void *buf,
@@ -866,8 +866,10 @@ char *ADIOI_Strdup(const char *);
 #define ADIOI_Info_delete(info_,key_str_) \
     MPI_Info_delete((info_),((char*)key_str_))
 
+#ifdef ROMIO_INSIDE_MPICH
 /* the I/O related support for MPI_Comm_split_type */
 int MPIR_Comm_split_filesystem(MPI_Comm comm, int key, const char *dirname, MPI_Comm * newcomm);
+#endif
 
 /* Define attribute as empty if it has no definition */
 #ifndef ATTRIBUTE
