@@ -23,7 +23,7 @@ EXTRA_DIST =
 SUFFIXES = 
 doc1_src_txt =
 
-external_subdirs = @mpl_srcdir@
+external_subdirs = @mpl_builddir@
 external_dist_subdirs = @mpl_dist_srcdir@
 external_includes = @mpl_includedir@
 external_ldflags = @mpl_libdir@
@@ -53,11 +53,11 @@ AM_CPPFLAGS += $(MPI_H_INCLUDE)
 # handle the "include" directory here
 AM_CPPFLAGS += -I$(top_builddir)/include -I$(top_srcdir)/include $(external_includes)
 # nodist_ b/c these are created by config.status and should not be distributed
-nodist_include_HEADERS += include/mpio.h include/mpiof.h
+noinst_HEADERS += include/mpio.h include/mpiof.h
 
 # ------------------------------------------------------------------------
 
-SUBDIRS = $(external_subdirs)
+SUBDIRS = $(external_subdirs) . test
 DIST_SUBDIRS = test test-internal $(external_dist_subdirs)
 
 # for the sake of parallel make and avoiding an excessive number of convenience
@@ -99,12 +99,18 @@ endif !BUILD_PROFILING_LIB
 
 else !BUILD_ROMIO_EMBEDDED
 lib_LTLIBRARIES = libromio.la
-libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+# libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+libromio_la_SOURCES = $(glue_sources)
+libromio_la_LIBADD = @mpl_lib@
 if BUILD_PROFILING_LIB
-libpromio_la_SOURCES = $(romio_mpi_sources)
+# Must build error handler functions when build ROMIO stand alone
+noinst_LTLIBRARIES = libpromio.la
+libromio_la_LIBADD += libpromio.la
+libpromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources)
 libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
-endif BUILD_PROFILING_LIB
-
+else !BUILD_PROFILING_LIB
+libromio_la_SOURCES += $(romio_mpi_sources) $(romio_other_sources)
+endif !BUILD_PROFILING_LIB
 endif
 
 # --------------------------------------------------------------------------

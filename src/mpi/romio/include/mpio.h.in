@@ -37,6 +37,8 @@ typedef struct ADIOI_FileD *MPI_File;
 typedef struct ADIOI_RequestD *MPIO_Request;  
 #else
 #define MPIO_Request MPI_Request
+#define MPIO_Request_c2f MPI_Request_c2f
+#define MPIO_Request_f2c MPI_Request_f2c
 #define MPIO_USES_MPI_REQUEST
 /* Also rename the MPIO routines to get the MPI versions */
 #define MPIO_Wait MPI_Wait
@@ -45,6 +47,8 @@ typedef struct ADIOI_RequestD *MPIO_Request;
 #define PMPIO_Test PMPI_Test
 #endif
 #define MPIO_REQUEST_DEFINED
+
+@DEFINE_HAVE_MPI_GREQUEST_EXTENSIONS@
 
 #ifndef HAVE_MPI_OFFSET
 /* *INDENT-OFF* */
@@ -94,7 +98,7 @@ typedef int MPI_Fint;
 
 #define MPI_DISPLACEMENT_CURRENT   -54278278
 
-#ifndef MPICH
+#if !defined(MPI_FILE_NULL) && (!defined(HAVE_DECL_MPI_FILE_NULL) || HAVE_DECL_MPI_FILE_NULL == 0)
 /* FIXME: Make sure that we get a consistent definition of MPI_FILE_NULL
 	in MPICH */
 /* MPICH defines null object handles differently */
@@ -126,6 +130,9 @@ typedef int MPI_Fint;
 #  define MPI_DISTRIBUTE_DFLT_DARG -49767
 #endif
 
+#ifndef ROMIO_INSIDE_MPICH
+#  define MPICH_ATTR_POINTER_WITH_TYPE_TAG(buffer_idx, type_idx)
+#endif
 
 /* MPI-IO function prototypes */
 
@@ -247,12 +254,9 @@ int MPI_File_set_atomicity(MPI_File fh, int flag) ROMIO_API_PUBLIC;
 int MPI_File_get_atomicity(MPI_File fh, int *flag) ROMIO_API_PUBLIC;
 int MPI_File_sync(MPI_File fh) ROMIO_API_PUBLIC;
 
-/* Section 4.13.3 */
-#ifndef MPICH
-/* MPICH provides these definitions */
+/* MPI 3.1 Section 8.3.3 */
 int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler) ROMIO_API_PUBLIC;
 int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) ROMIO_API_PUBLIC;
-#endif
 
 /* For MPI 3.1 */
 int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,

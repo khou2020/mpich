@@ -17,7 +17,7 @@ OUR_LIBS = $(TEST_LIBNAME) $(MPI_LIB) $(ROMIO_LIBLIST)
 
 LDADD = $(OUR_LIBS)
 
-AM_CPPFLAGS = $(ROMIO_INCLUDE)
+AM_CPPFLAGS = $(ROMIO_INCLUDE) @mpl_includedir@
 AM_CFLAGS = $(USER_CFLAGS)
 
 CTESTS = file_realms_test io_bounds_test heap_test

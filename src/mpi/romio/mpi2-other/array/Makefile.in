@@ -6,9 +6,10 @@ srcdir      = @srcdir@
 CC_SHL      = @CC_SHL@
 SHLIBNAME   = @SHLIBNAME@
 
-INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I../../include -I${srcdir}/../../mpi-io -I${srcdir}/../../adio/include -I../../adio/include
+INCLUDE_DIR = -I@MPI_INCLUDE_DIR@ -I../../include -I${srcdir}/../../mpi-io -I${srcdir}/../../adio/include -I../../adio/include @mpl_includedir@
 CFLAGS      = @CPPFLAGS@ @CFLAGS@ $(MPIOPROFILE) $(INCLUDE_DIR)
 
+top_srcdir    = @master_top_srcdir@
 top_builddir  = @master_topbuild_dir@
 LIBTOOL       = @LIBTOOL@
 C_COMPILE_SHL = $(CC_SHL)

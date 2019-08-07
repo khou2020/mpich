@@ -104,5 +104,5 @@ endif BUILD_MPIO_REQUEST
 
 # not used in MPICH
 if BUILD_MPIO_ERRHAN
-romio_other_sources += $(mpio_request_sources)
+romio_other_sources += $(mpio_extra_sources)
 endif BUILD_MPIO_ERRHAN
